@@ -1,6 +1,7 @@
 library(shiny)
 library(httr)
 library(jsonlite)
+source('llmapi.R')
 
 # Function to call Gemini API
 gemini <- function(prompt, temperature = 0.5, max_output_tokens = 1024) {
@@ -39,7 +40,9 @@ ui <- fluidPage(
 server <- function(input, output) {
   output$response <- renderText({
     if (nchar(input$userInput) > 0) {
-      gemini(input$userInput)
+      #gemini(input$userInput)
+      input_text <- input$userInput
+      fast_get_llm_result(prompt = input_text)
     } else {
       "Ask me anything!"
     }
