@@ -75,3 +75,4 @@ send_message <- function(con, sender,content) {
   
   dbAppendTable(con, "messages", new_message)
 }
+

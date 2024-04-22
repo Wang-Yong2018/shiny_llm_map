@@ -21,6 +21,7 @@ box::use(purrrlyr[by_row],
 box::use(../global_constant[app_name])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(stats[runif])
+
 # function to render SQL chat messages into HTML that we can style with CSS
 # inspired by:
 # https://www.r-bloggers.com/2017/07/shiny-chat-in-few-lines-of-code-2/
@@ -95,6 +96,7 @@ ui <- function(id, label='chat_echo'){
 
 #' @export
 server <- function(id) {
+  
   moduleServer(id, function(input, output, session) {
     shiny::updateTextInput(inputId = "msg_username",
                            value = paste0("八卦之人", round(runif(n=1, min=1000,max = 9999)),'号'))
@@ -117,9 +119,7 @@ server <- function(id) {
     # button handler for chat clearing
     observeEvent(input$msg_clearchat, {
     #  if (debug) message("clearing chat log.")
-      
       db_clear(con)
-      
       messages_db <- reactiveValues(messages = read_messages(con))
       
     })
@@ -130,7 +130,6 @@ server <- function(id) {
       
       # only do anything if there's a message
       if (!(input$msg_text == "" | is.null(input$msg_text))) {
-       
         send_message(con, sender=input$msg_username, content=input$msg_text)
         
         messages_db$messages <- read_messages(con)
@@ -146,5 +145,5 @@ server <- function(id) {
       render_msg_fancy(messages_db$messages,
                        input$msg_username)
     })
-  }
-  )}
+
+ })}
