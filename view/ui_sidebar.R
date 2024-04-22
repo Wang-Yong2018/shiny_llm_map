@@ -35,13 +35,13 @@ ui <- function(id,label='sidebar'){
                           
                  ),
                  menuItem(i18n$translate('ai_chats'),icon=icon('dashboard'),startExpanded =F,
-                          menuSubItem(i18n$translate("chat_gemini"), tabName = 'chat_gemini',icon=icon('flask')),
-                          menuSubItem(i18n$translate("chat_openai"), tabName = 'chat_openai',icon=icon('question')),
-                          menuSubItem(i18n$translate("chat_debate"), tabName = 'chat_debate',icon=icon('ruler')),
-                          menuSubItem(i18n$translate("chat_rag"), tabName = 'chat_rag',icon=icon('magnifying-glass')),
-                          menuSubItem(i18n$translate("chat_image"), tabName = 'chat_image',icon=icon('chart-simple')),
-                          menuSubItem(i18n$translate("chat_voice"), tabName = 'chat_voice',icon=icon('check')),
-                          menuSubItem(i18n$translate("chat_mm"), tabName = 'chat_mm',icon=icon('check'))
+                          menuSubItem(i18n$translate("chat_gemini"), tabName = 'chat_gemini',icon=icon('google')),
+                          menuSubItem(i18n$translate("chat_openai"), tabName = 'chat_openai',icon=icon('robot')),
+                          menuSubItem(i18n$translate("chat_debate"), tabName = 'chat_debate',icon=icon('fire')),
+                          menuSubItem(i18n$translate("chat_rag"), tabName = 'chat_rag',icon=icon('file')),
+                          menuSubItem(i18n$translate("chat_image"), tabName = 'chat_image',icon=icon('image')),
+                          menuSubItem(i18n$translate("chat_voice"), tabName = 'chat_voice',icon=icon('radio')),
+                          menuSubItem(i18n$translate("chat_mm"), tabName = 'chat_mm',icon=icon('bridge'))
                  )  
                  
     ))

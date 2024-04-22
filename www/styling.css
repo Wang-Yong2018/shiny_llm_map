@@ -5,7 +5,7 @@
 .chat-container {
   display: flex;
   flex-flow: column nowrap;
-  height: 800px;
+  height: 600px;
   overflow-y: scroll;
   border-style:outset;
   background: lightblue;
