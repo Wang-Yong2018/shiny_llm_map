@@ -151,5 +151,4 @@ server <- function(id) {
       render_msg_fancy(messages_db$messages,
                        input$msg_username)
     })
-  }
-  )}
+  })}
