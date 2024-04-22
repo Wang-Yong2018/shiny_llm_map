@@ -1,10 +1,19 @@
-library(httr2)
-library(purrr)
-library(memoise)
-cache_dir <- cachem::cache_disk("./cache",max_age = 3600*24)
+box::use(httr2[request, req_perform,
+               resp_status,
+               req_body_json, req_user_agent,
+               req_url_query, req_url_path_append,
+               resp_body_json])
+box::use(purrr[map_dfr, pluck])
+box::use(cachem[cache_disk],
+         memoise[memoise])
+box::use(dplyr[as_tibble])
+# library(purrr)
+# library(memoise)
+cache_dir <- cache_disk("./cache",max_age = 3600*24)
 
 # build llm connection
 req_perform_quick<- memoise(req_perform,cache = cache_dir)
+
 
 set_llm_conn <- function(
     url='https://generativelanguage.googleapis.com/v1beta/models'
@@ -23,6 +32,7 @@ set_llm_conn <- function(
 }
 
 # get llm service result
+#' @export
 get_llm_result<- function(prompt='hi'){
   
 
@@ -49,6 +59,7 @@ get_llm_result<- function(prompt='hi'){
   return(response_message)
 }
 
+#' @export 
 fast_get_llm_result<-memoise(get_llm_result,cache=cache_dir)
 
 # list the large lanugage model services list info as data frame
@@ -66,6 +77,7 @@ list_llm_service <- function(){
 # Function to check connection with google
 
 # Replace "https://api.labs.google.com/" with the specific Gemini API endpoint you're using
+#' @export
 check_llm_connection<- function() {
 
   is_connected =FALSE 

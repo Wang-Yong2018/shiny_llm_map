@@ -1,0 +1,170 @@
+box::use(shiny[NS,
+               moduleServer, 
+               h2,h3,tagList,div,a,
+               fluidPage, fluidRow, column,
+               plotOutput,
+               renderImage,
+               tags,
+               titlePanel,
+               uiOutput,
+               textInput, textOutput,
+               textAreaInput,
+               actionButton,
+               hr,
+               reactiveValues, observe, observeEvent,
+               ])
+
+box::use(../etl/chat_api[db_connect, 
+                         read_messages, send_message])
+box::use(../etl/llmapi[ get_llm_result, check_llm_connection])
+box::use(purrrlyr[by_row],
+         purrr[pluck])
+box::use(../global_constant[app_name])
+box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
+box::use(stats[runif])
+# function to render SQL chat messages into HTML that we can style with CSS
+# inspired by:
+# https://www.r-bloggers.com/2017/07/shiny-chat-in-few-lines-of-code-2/
+
+render_msg_fancy <- function(messages, self_username) {
+  fancy_msg <- 
+    messages|> 
+    by_row(~ div(class =  if_else(
+      .$username == self_username,
+      "chat-message-left", "chat-message-right"),
+      a(class = "username", .$username),
+      div(class = "message", .$message),
+      div(class = "datetime", .$datetime)
+    )) |>
+    pluck('.out')
+  
+  div(id = "chat-container",
+      class = "chat-container",
+      fancy_msg)
+}
+
+
+#' @export
+ui <- function(id, label='chat_gemini'){
+  ns <- NS(id)
+
+  fluidPage(
+     id = "chatbox-container",
+     tags$head(
+        tags$script(src = "script.js"),
+        tags$link(rel = "stylesheet", type = "text/css", href = "styling.css")
+      ),
+
+    #Application title
+    titlePanel(ns("简单聊天机器人-shiny&geminy")),
+
+    #tags$div(uiOutput(ns("messages_fancy"))),
+    #tags$div(textOutput(ns('messages_fany'))),
+    fluidRow(
+      column(
+        uiOutput(ns("messages_fancy")),
+        width=9
+      )
+      
+    ),
+    fluidRow(
+      column(width=7,
+             tags$div(textAreaInput(ns("msg_text"),
+                                    label = NULL,
+                                    width='800px',
+                                    height='60px',
+             ) )),
+      column(width=2,
+             actionButton(ns("msg_button"),
+                          "发送",
+                          height="30px"),
+             style="display:flex"),
+      hr()
+      ),
+    fluidRow(
+      column(width=3,
+             textInput(ns("msg_username"), "用户名:", value = "八卦之人" )
+             ),
+      column(width=2,
+             actionButton(ns("msg_clearchat"), "清除对话")
+             )
+    )
+
+    
+)}
+
+
+#' @export
+server <- function(id) {
+  moduleServer(id, function(input, output, session) {
+    shiny::updateTextInput(inputId = "msg_username",
+                           value = paste0("八卦之人", round(runif(n=1, min=1000,max = 9999)),'号'))
+    
+    con <- db_connect()
+    
+    # set up our messages data locally
+    messages_db <- reactiveValues(messages = read_messages(con))
+    
+    # look for new messages every n milliseconds
+    db_check_timer <- shiny::reactiveTimer(intervalMs = 1000)
+    
+    observe({
+      db_check_timer()
+    #  if (debug) message("checking table...")
+      messages_db$messages <- read_messages(con)
+      
+    })
+    
+    # button handler for chat clearing
+    observeEvent(input$msg_clearchat, {
+    #  if (debug) message("clearing chat log.")
+      
+      db_clear(con)
+      
+      messages_db <- reactiveValues(messages = read_messages(con))
+      
+    })
+    
+    # button handler for sending a message
+    observeEvent(input$msg_button, {
+   #   if (debug) message(input$msg_text)
+      
+      # only do anything if there's a message
+      if (!(input$msg_text == "" | is.null(input$msg_text))) {
+        msg_time <- 
+          Sys.time( )|> 
+          as.character()|>
+          substr(6,19)
+        
+        new_message <- dplyr::tibble(username = input$msg_username,
+                                     message = input$msg_text,
+                                     datetime = msg_time)
+        send_message(con, new_message)
+        
+        llm_answer <- get_llm_result(prompt=input$msg_text)
+              
+        response_time <- 
+          Sys.time( )|> 
+          as.character()|>
+          substr(6,19)
+        
+        llm_message <- dplyr::tibble(username = 'gemini-pro 1.5',
+                                          message = llm_answer,
+                                          datetime = response_time)
+        send_message(con, llm_message)
+        
+        messages_db$messages <- read_messages(con)
+        
+        # clear the message text
+        shiny::updateTextInput(inputId = "msg_text",
+                               value = "")
+      }
+    })
+    
+    # render the chat data using a custom function
+    output$messages_fancy <- shiny::renderUI({
+      render_msg_fancy(messages_db$messages,
+                       input$msg_username)
+    })
+  }
+  )}

@@ -10,6 +10,7 @@ box::use(./global_constant[app_name])
 box::use(
    ./view/ui_sidebar,
    ./view/ui_echo,
+   ./view/ui_gemini
 #   ./view/ui_glimpse,
 #   ./view/ui_plot_xy,
 #   ./view/ui_intro,
@@ -32,10 +33,11 @@ ui <- dashboardPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   ui_echo$server('chat_echo')
+  ui_gemini$server('gemini')
   output$mainPanelContent <- renderUI({
      switch(input$sidebar,
             'chat_echo'=ui_echo$ui('chat_echo'),
-            "chat_gemini"= h2('gemini Under construction') ,
+            "chat_gemini"= ui_gemini$ui('gemini') ,
             "chat_openai"= h2('openai Under construction') ,
             "chat_debate"= h2('debate Under construction') ,
             "chat_rag"= h2('rag Under construction') ,
