@@ -25,19 +25,19 @@ get_data_schema <- function(){
 }
 
 #' @export
-db_connect <- function() {
+db_connect <- function(model_db='echo') {
   # make sure we have a data directory
   if (!dir.exists("data")) dir.create("data")
   
   # connect to SQLite database, or create one
-  
-  con <- dbConnect(SQLite(), "data/messages.sqlite")
+  db_name <- file.path('data',paste0(model_db,'.sqlite'))
+  con <- dbConnect(SQLite(), db_name)
   
   # if there is no message table, create one using our schema
   if (!"messages" %in% dbListTables(con)){
     message_db_schema <- get_data_schema()
     
-    db_clear(con, message_db_schema)
+    db_clear(con)
   }
   
   return(con)
@@ -61,6 +61,17 @@ read_messages <- function(con){
 }
 
 #' @export
-send_message <- function(con, new_message) {
+send_message <- function(con, sender,content) {
+  msg_time <-
+    Sys.time( )|> 
+    as.character()|>
+    substr(6,19)
+  msg_sender <- sender
+  msg_content <- content
+ 
+  new_message <- dplyr::tibble(username = msg_sender,
+                               message = msg_content,
+                               datetime = msg_time)
+  
   dbAppendTable(con, "messages", new_message)
 }

@@ -99,7 +99,7 @@ server <- function(id) {
     shiny::updateTextInput(inputId = "msg_username",
                            value = paste0("八卦之人", round(runif(n=1, min=1000,max = 9999)),'号'))
     
-    con <- db_connect()
+    con <- db_connect(model_db='echo')
     
     # set up our messages data locally
     messages_db <- reactiveValues(messages = read_messages(con))
@@ -130,15 +130,8 @@ server <- function(id) {
       
       # only do anything if there's a message
       if (!(input$msg_text == "" | is.null(input$msg_text))) {
-        msg_time <- 
-          Sys.time( )|> 
-          as.character()|>
-          substr(6,19)
-        
-        new_message <- dplyr::tibble(username = input$msg_username,
-                                     message = input$msg_text,
-                                     datetime = msg_time)
-        send_message(con, new_message)
+       
+        send_message(con, sender=input$msg_username, content=input$msg_text)
         
         messages_db$messages <- read_messages(con)
         

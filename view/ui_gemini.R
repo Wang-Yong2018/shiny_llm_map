@@ -98,9 +98,10 @@ ui <- function(id, label='chat_gemini'){
 server <- function(id) {
   moduleServer(id, function(input, output, session) {
     shiny::updateTextInput(inputId = "msg_username",
-                           value = paste0("八卦之人", round(runif(n=1, min=1000,max = 9999)),'号'))
+                           value = paste0("八卦之人",
+                                          round(runif(n=1, min=1000,max = 9999)),'号'))
     
-    con <- db_connect()
+    con <- db_connect(model_db='gemini')
     
     # set up our messages data locally
     messages_db <- reactiveValues(messages = read_messages(con))
@@ -118,40 +119,24 @@ server <- function(id) {
     # button handler for chat clearing
     observeEvent(input$msg_clearchat, {
     #  if (debug) message("clearing chat log.")
-      
       db_clear(con)
-      
       messages_db <- reactiveValues(messages = read_messages(con))
-      
     })
     
     # button handler for sending a message
     observeEvent(input$msg_button, {
-   #   if (debug) message(input$msg_text)
-      
-      # only do anything if there's a message
+    # if (debug) message(input$msg_text)
+    # only do anything if there's a message
       if (!(input$msg_text == "" | is.null(input$msg_text))) {
-        msg_time <- 
-          Sys.time( )|> 
-          as.character()|>
-          substr(6,19)
-        
-        new_message <- dplyr::tibble(username = input$msg_username,
-                                     message = input$msg_text,
-                                     datetime = msg_time)
-        send_message(con, new_message)
+        send_message(con, 
+                     sender=input$msg_username, 
+                     content=input$msg_text)
         
         llm_answer <- get_llm_result(prompt=input$msg_text)
               
-        response_time <- 
-          Sys.time( )|> 
-          as.character()|>
-          substr(6,19)
-        
-        llm_message <- dplyr::tibble(username = 'gemini-pro 1.5',
-                                          message = llm_answer,
-                                          datetime = response_time)
-        send_message(con, llm_message)
+        send_message(con, 
+                     sender='gemini_pro',
+                     content=llm_answer)
         
         messages_db$messages <- read_messages(con)
         

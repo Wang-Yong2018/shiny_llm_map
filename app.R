@@ -18,11 +18,11 @@ box::use(
  )
 
 ui <- dashboardPage(
-  title=app_name,
+  title = app_name,
   dashboardHeader(),
   
   dashboardSidebar(
-    collapsed=F,
+    collapsed = FALSE,
     ui_sidebar$ui('menu')
   ),
   dashboardBody(
@@ -36,14 +36,14 @@ server <- function(input, output) {
   ui_gemini$server('gemini')
   output$mainPanelContent <- renderUI({
      switch(input$sidebar,
-            'chat_echo'=ui_echo$ui('chat_echo'),
-            "chat_gemini"= ui_gemini$ui('gemini') ,
-            "chat_openai"= h2('openai Under construction') ,
-            "chat_debate"= h2('debate Under construction') ,
-            "chat_rag"= h2('rag Under construction') ,
-            "chat_image"= h2('image Under construction') ,
-            "chat_voice"= h2('voice Under construction') ,
-            "chat_mm"= h2('multi media model Under construction')#,
+            'chat_echo' = ui_echo$ui('chat_echo'),
+            "chat_gemini" = ui_gemini$ui('gemini') ,
+            "chat_openai" = h2('openai Under construction') ,
+            "chat_debate" = h2('debate Under construction') ,
+            "chat_rag" = h2('rag Under construction') ,
+            "chat_image" = h2('image Under construction') ,
+            "chat_voice" = h2('voice Under construction') ,
+            "chat_mm" = h2('multi media model Under construction')#,
    
      )
   })
