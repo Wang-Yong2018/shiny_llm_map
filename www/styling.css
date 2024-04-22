@@ -1,5 +1,6 @@
 #chatbox-container {
-  max-width:800px;
+  max-width:1024px;
+  border-style: outset;
 }
 
 .chat-container {
@@ -58,4 +59,4 @@
   text-align:right;
 }
 
-.container-fluid {  max-width: 800px; padding:25px; margin-left: auto; margin-right: auto; }
+.container-fluid {  max-width: 1024px; padding:25px; margin-left: auto; margin-right: auto; }
