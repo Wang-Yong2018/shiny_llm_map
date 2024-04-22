@@ -1,11 +1,11 @@
 #chatbox-container {
-  max-width:400px;
+  max-width:800px;
 }
 
 .chat-container {
   display: flex;
   flex-flow: column nowrap;
-  height: 400px;
+  height: 600px;
   overflow-y: scroll;
 }
 
@@ -58,4 +58,4 @@
   text-align:right;
 }
 
-.container-fluid {  max-width: 400px; padding:25px; margin-left: auto; margin-right: auto; }
+.container-fluid {  max-width: 800px; padding:25px; margin-left: auto; margin-right: auto; }

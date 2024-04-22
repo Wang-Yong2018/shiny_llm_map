@@ -37,13 +37,19 @@ ui <- fluidPage(
   
   uiOutput("messages_fancy"),
   
-  tags$div(textInput("msg_text", label = NULL),
-           actionButton("msg_button", "发送", height="30px"),
+  tags$div(textAreaInput("msg_text", 
+                         label = NULL,
+                         width='800px',
+                         height='60px',
+                         ),
+           actionButton("msg_button",
+                        "发送",
+                        height="30px"),
            style="display:flex"),
   
   hr(),
   
-  textInput("msg_username", "用户名:", value = "八卦之人"),
+  textInput("msg_username", "用户名:", value = "八卦之人" ),
   actionButton("msg_clearchat", "清除对话")
 )
 
