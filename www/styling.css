@@ -1,12 +1,14 @@
 #chatbox-container {
-  max-width:400px;
+  max-width:1024px;
 }
 
 .chat-container {
   display: flex;
   flex-flow: column nowrap;
-  height: 400px;
+  height: 800px;
   overflow-y: scroll;
+  border-style:outset;
+  background: lightblue;
 }
 
 .chat-container .chat-message-left {
@@ -40,7 +42,6 @@
   padding-bottom: 5px;
   margin-bottom: 1.3vh;
   background:#E1F6FF;
-  background:#B9EBFF;
 }
 
 .chat-container .chat-message-left .username {
@@ -58,4 +59,9 @@
   text-align:right;
 }
 
-.container-fluid {  max-width: 400px; padding:25px; margin-left: auto; margin-right: auto; }
+.container-fluid { 
+  max-width: 1024px; 
+  padding:25px;
+  margin-left: auto;
+  margin-right: auto; 
+}
