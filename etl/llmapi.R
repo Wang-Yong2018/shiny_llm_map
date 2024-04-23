@@ -1,5 +1,5 @@
 box::use(httr2[request, req_perform,
-               resp_status,
+               resp_status,req_retry,req_error,
                req_body_json, req_user_agent,
                req_url_query, req_url_path_append,
                resp_body_json])
@@ -7,25 +7,29 @@ box::use(purrr[map_dfr, pluck])
 box::use(cachem[cache_disk],
          memoise[memoise])
 box::use(dplyr[as_tibble])
+box::use(rlang[abort,warn])
 # library(purrr)
 # library(memoise)
 cache_dir <- cache_disk("./cache",max_age = 3600*24)
 
 # build llm connection
-req_perform_quick<- memoise(req_perform,cache = cache_dir)
+req_perform_quick <- memoise(req_perform,cache = cache_dir)
 
 
 set_llm_conn <- function(
-    url='https://generativelanguage.googleapis.com/v1beta/models'
+    url='https://generativelanguage.googleapis.com/v1beta/models',
+    max_seconds=3
     ) {
   
   api_key <- Sys.getenv('gemini_api_key')
-  llm_method <-'gemini-pro:generateContent' 
+  llm_method <- 'gemini-pro:generateContent' 
   #prompt_message <- 'who are you?'
   #model_type='gemini-pro:generateContent' 
-  req <- request(url)|>
-    req_url_query(key=api_key)|>
+  req <- request(url) |>
+    req_url_query(key=api_key) |>
     req_url_path_append(llm_method) |>
+    req_retry(  max_tries = 3,
+                backoff = ~2) |>
     req_user_agent('shiny_gemini')
   #print(req)
   return(req)
@@ -33,7 +37,7 @@ set_llm_conn <- function(
 
 # get llm service result
 #' @export
-get_llm_result<- function(prompt='hi'){
+get_llm_result <- function(prompt='hi'){
   
 
   post_body = list(
@@ -46,21 +50,27 @@ get_llm_result<- function(prompt='hi'){
       maxOutputTokens = 1024
     )
   )
+ 
+  response <- try( set_llm_conn() |>
+                     req_body_json(data=post_body) |>
+                     req_error(is_error = \(resp) FALSE) |>
+                     req_perform()
+                   )
+  if('try-error' %in% class(response)){
+    response_message <- 'connection failed! pls check network' 
+  } else {
+    response_message <- 
+      response |> 
+      resp_body_json() |>
+      pluck('candidates',1,'content','parts',1,'text')
+    }
   
-  response <- 
-    set_llm_conn()|>
-    req_body_json(data=post_body)|>
-    req_perform()
   
-  response_message <- 
-    response|> 
-    resp_body_json()|>
-    pluck('candidates',1,'content','parts',1,'text')
   return(response_message)
 }
 
 #' @export 
-fast_get_llm_result<-memoise(get_llm_result,cache=cache_dir)
+fast_get_llm_result <- memoise(get_llm_result,cache=cache_dir)
 
 # list the large lanugage model services list info as data frame
 # two version , list, fast list

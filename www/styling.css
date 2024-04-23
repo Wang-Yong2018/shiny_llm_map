@@ -6,7 +6,7 @@
 .chat-container {
   display: flex;
   flex-flow: column nowrap;
-  height: 600px;
+  height: 400px;
   overflow-y: scroll;
 }
 
@@ -24,6 +24,9 @@
   padding-bottom: 5px;
   margin-bottom: 1.3vh;
   background:#E1F6FF;
+  white-space: pre-line;
+  
+  
 }
 
 .chat-container .chat-message-right {
@@ -42,6 +45,7 @@
   margin-bottom: 1.3vh;
   background:#E1F6FF;
   background:#B9EBFF;
+  white-space: pre-line;
 }
 
 .chat-container .chat-message-left .username {

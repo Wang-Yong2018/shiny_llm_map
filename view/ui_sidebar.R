@@ -29,13 +29,13 @@ ui <- function(id,label='sidebar'){
   tagList(
     sidebarMenu( id='sidebar',collapsed=TRUE,
                  
-                 menuItem(i18n$translate('navigate'),icon=icon('dashboard'),startExpanded =T,
+                 menuItem(i18n$translate('navigate'),icon=icon('dashboard'),startExpanded =F,
                           #menuSubItem(i18n$translate("intro"), tabName='ds_intro',icon=icon('eye'),selected=TRUE),
-                          menuSubItem(i18n$translate("chat_echo"), tabName = 'chat_echo',icon=icon('th'),selected=TRUE)
+                          menuSubItem(i18n$translate("chat_echo"), tabName = 'chat_echo',icon=icon('th'))
                           
                  ),
-                 menuItem(i18n$translate('ai_chats'),icon=icon('dashboard'),startExpanded =F,
-                          menuSubItem(i18n$translate("chat_gemini"), tabName = 'chat_gemini',icon=icon('google')),
+                 menuItem(i18n$translate('ai_chats'),icon=icon('dashboard'),startExpanded =T,
+                          menuSubItem(i18n$translate("chat_gemini"), tabName = 'chat_gemini',icon=icon('google'),selected=TRUE),
                           menuSubItem(i18n$translate("chat_openai"), tabName = 'chat_openai',icon=icon('robot')),
                           menuSubItem(i18n$translate("chat_debate"), tabName = 'chat_debate',icon=icon('fire')),
                           menuSubItem(i18n$translate("chat_rag"), tabName = 'chat_rag',icon=icon('file')),

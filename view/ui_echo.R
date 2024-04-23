@@ -15,7 +15,7 @@ box::use(shiny[NS,
                ])
 
 box::use(../etl/chat_api[db_connect, 
-                         read_messages, send_message])
+                         read_messages, send_message,db_clear])
 box::use(purrrlyr[by_row],
          purrr[pluck])
 box::use(../global_constant[app_name])
@@ -49,22 +49,19 @@ ui <- function(id, label='chat_echo'){
   ns <- NS(id)
 
   fluidPage(
-     id = "chatbox-container",
      tags$head(
         tags$script(src = "script.js"),
         tags$link(rel = "stylesheet", type = "text/css", href = "styling.css")
       ),
 
     #Application title
-    titlePanel(ns("chat_echo")),
+    #titlePanel(ns("chat_echo")),
 
     #tags$div(uiOutput(ns("messages_fancy"))),
     #tags$div(textOutput(ns('messages_fany'))),
     fluidRow(
-      column(
-        uiOutput(ns("messages_fancy")),
-        width=12
-      )
+     id = "chatbox-container",
+        uiOutput(ns("messages_fancy"))
       
     ),
     fluidRow(
