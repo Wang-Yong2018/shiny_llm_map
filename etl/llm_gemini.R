@@ -131,6 +131,13 @@ chat <- function(prompt,history =NULL,  use_cache = TRUE){
  # The ChatSession class simplifies the process by managing the state of the 
  # conversation, so unlike with generate_content, you do not have to store the
  # conversation history as a list.
+ # input: 
+ #  1. single prompt
+ #  2. history conversation record - it should be stored by external for remember history and short memeory
+  
+ # output:
+ #   1. output_text
+ #   2. last_history
   
   fast_py_chat <- memoise(py_chat, 
                            cache = cache_dir)
