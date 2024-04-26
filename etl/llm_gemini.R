@@ -146,10 +146,10 @@ chat <- function(prompt,history =NULL,  use_cache = TRUE){
   
   last_history <- py_chat(prompt,history) 
   
-  text_output <- last_history|>pluck(-1, 'parts',-1,'text') 
-  chat_history <- list(history=last_history,
-                       text_output = text_output)
-  return(chat_history)  
+  #text_output <- last_history|>pluck(-1, 'parts',-1,'text') 
+  #chat_history <- list(history=last_history,
+  #                     text_output = text_output)
+  return(last_history)  
 }
 
 

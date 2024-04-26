@@ -58,11 +58,11 @@ def py_chat(prompt, history=None,to_markdown=False):
   chat_id = model.start_chat(history=history)
   
   response = chat_id.send_message(prompt)
-  history = chat_id.history  
-  
-  if to_markdown==True:
-    text_output = py_to_markdown(response.text)
-  else:
-    text_output = response.text
+  updated_history = chat_id.history  
+  # 
+  # if to_markdown==True:
+  #   text_output = py_to_markdown(response.text)
+  # else:
+  #   text_output = response.text
     
-  return(history)  
+  return(updated_history)  
