@@ -12,10 +12,27 @@ api_key=os.environ['GOOGLE_API_KEY']
 genai.configure(api_key=api_key)
 
 
-def multiply(a:float, b:float):
-    """returns a * b."""
+#  Define addition operation function
+def add(a, b):
+    return a+b
+
+# Define subtraction operation function
+def subtract(a, b):
+    return a-b
+
+# Define multiplication operation function
+def mult(a, b):
     return a*b
+
+# Define division operation function
+def div(a, b):
+    if b==0:
+      result=None
+    else:
+      result = a/b
+    return result
   
+
   
 # format the answer result into markdown format
 def py_to_markdown(text):
@@ -55,14 +72,15 @@ def py_text_image_input(prompt, image_path,to_markdown=False):
     
   return(text_output)
 
-def py_chat(prompt, history=None,to_markdown=False):
+def py_chat(prompt, history=None,call_function=False, to_markdown=False):
   
   model = genai.GenerativeModel('gemini-pro',
-   tools=[multiply])
+   tools=[add, subtract, mult, div])
+  
   if history is None:
     history=[]
   
-  chat_id = model.start_chat(history=history,enable_automatic_function_calling=True)
+  chat_id = model.start_chat(history=history,enable_automatic_function_calling=call_function)
   
   response = chat_id.send_message(prompt)
   updated_history = chat_id.history  
