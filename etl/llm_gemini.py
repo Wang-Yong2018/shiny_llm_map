@@ -1,4 +1,5 @@
 import os
+
 import pathlib
 import textwrap
 
@@ -7,9 +8,13 @@ from IPython.display import Markdown
 import PIL.Image
 
 import google.generativeai as genai
+from openai import OpenAI
 # init the google generativeai api key globally
-api_key=os.environ['GOOGLE_API_KEY']
-genai.configure(api_key=api_key)
+#api_key=os.environ['GOOGLE_API_KEY']
+api_key =  os.environ['OPENROUTER_API_KEY']
+base_url = 'https://openrouter.ai/api/v1'
+client  = OpenAI(api_key=api_key,
+                base_url=base_url)
 
 
 #  Define addition operation function
