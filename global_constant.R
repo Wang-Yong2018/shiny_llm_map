@@ -17,7 +17,7 @@ app_name <- i18n$translate('AI_chatbox')
 # time series name
 ts_var_name <-'biz_date'
 # ts_var_name <-'rq' 
-
+model_id_list <- c('gemini', 'gpt', 'gpt35', 'gpt4','gpt4t', 'gpt4v')
 # group key name
 site_var_name <- 'collection_node'
 # site_var_name <- 'site_name'

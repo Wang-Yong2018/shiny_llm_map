@@ -1,6 +1,6 @@
 box::use(httr2[request, req_perform,
                resp_status,req_retry,req_error,
-               req_body_json, req_user_agent,
+               req_body_json, req_user_agent,req_headers,
                req_url_query, req_url_path_append,
                resp_body_json])
 box::use(purrr[map_dfr, pluck])
@@ -17,6 +17,51 @@ req_perform_quick <- memoise(req_perform,cache = cache_dir)
 
 
 set_llm_conn <- function(
+    url = "https://openrouter.ai/api/v1/chat/completions",
+    max_seconds=3
+    ) {
+# this is openrouter llm connection 
+  api_key = Sys.getenv('OPENROUTER_API_KEY') 
+  #prompt_mesage <- 'who are you?'
+  #model_type='gemini-pro:generateContent' 
+  req <- request(url) |>
+    req_headers(Authorization='Bearer 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') |>
+    req_retry(  max_tries = 3,
+                backoff = ~2) |>
+    req_user_agent('shiny_gemini')
+  
+  return(req)
+}
+
+get_json_data <- function(input, model_id=NULL){
+  
+  # select the model
+  select_model= switch(model_id,
+                       gpt = "openai/gpt-3.5-turbo", 
+                       gpt35 = "openai/gpt-3.5-turbo", 
+                       gpt4 = "openai/gpt-4",
+                       gpt4t = "openai/gpt-4-turbo",
+                       gpt4v = "openai/gpt-4-vision-preview",
+                       gemini ="google/gemini-pro-1.5",
+                       "google/gemini-pro-1.5" )
+  # prepare the configure
+  json_generationConfig = list( temperature = 0.5,
+                                maxOutputTokens = 1024)
+  # prepare the data
+  json_contents <- list(list(role = 'user',content=input)
+                                         # this is a list of messages
+                                         
+                                         )
+  
+  json_data <- list(model=select_model,
+                    messages = json_contents#,
+                    #generationConfig = json_generationConfig
+                    )
+  return(json_data)
+}
+
+
+bak_set_llm_conn <- function(
     url='https://generativelanguage.googleapis.com/v1beta/models',
     max_seconds=3
     ) {
@@ -37,19 +82,10 @@ set_llm_conn <- function(
 
 # get llm service result
 #' @export
-get_llm_result <- function(prompt='hi'){
+get_llm_result <- function(prompt='hi',model_id='gemini'){
   
 
-  post_body = list(
-    contents = list( 
-      parts = list(list(text = prompt)
-                   )
-      ),
-    generationConfig = list(
-      temperature = 0.5,
-      maxOutputTokens = 1024
-    )
-  )
+  post_body <- get_json_data(prompt,model_id)
  
   response <- try( set_llm_conn() |>
                      req_body_json(data=post_body) |>
@@ -62,7 +98,8 @@ get_llm_result <- function(prompt='hi'){
     response_message <- 
       response |> 
       resp_body_json() |>
-      pluck('candidates',1,'content','parts',1,'text')
+      pluck('choices',1,'message','content')  
+    
     }
   
   
@@ -104,3 +141,4 @@ check_llm_connection<- function() {
   }
  return(is_connected) 
 }
+

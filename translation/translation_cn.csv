@@ -4,6 +4,7 @@ navigate, 导航
 ai_chats, AI工具
 chat_echo, 留言板
 chat_gemini, 谷歌AI 
+chat_AIs, AI抢答
 chat_openai, GPTAI
 chat_debate, AI辩论
 chat_rag, 资料洞察

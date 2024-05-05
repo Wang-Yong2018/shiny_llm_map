@@ -35,8 +35,7 @@ ui <- function(id,label='sidebar'){
                           
                  ),
                  menuItem(i18n$translate('ai_chats'),icon=icon('dashboard'),startExpanded =T,
-                          menuSubItem(i18n$translate("chat_gemini"), tabName = 'chat_gemini',icon=icon('google'),selected=TRUE),
-                          menuSubItem(i18n$translate("chat_openai"), tabName = 'chat_openai',icon=icon('robot')),
+                          menuSubItem(i18n$translate("chat_AIs"), tabName = 'chat_gemini',icon=icon('google'),selected=TRUE),
                           menuSubItem(i18n$translate("chat_debate"), tabName = 'chat_debate',icon=icon('fire')),
                           menuSubItem(i18n$translate("chat_rag"), tabName = 'chat_rag',icon=icon('file')),
                           menuSubItem(i18n$translate("chat_image"), tabName = 'chat_image',icon=icon('image')),

@@ -8,10 +8,11 @@ box::use(shiny[NS,
                titlePanel,
                uiOutput,
                textInput, textOutput,
+               selectInput,
                textAreaInput,
                actionButton,
                hr,
-               reactiveValues, observe, observeEvent,
+               reactiveValues, observe, observeEvent,reactive
                ])
 
 box::use(../etl/chat_api[db_connect, 
@@ -19,7 +20,7 @@ box::use(../etl/chat_api[db_connect,
 box::use(../etl/llmapi[ get_llm_result, check_llm_connection])
 box::use(purrrlyr[by_row],
          purrr[pluck])
-box::use(../global_constant[app_name])
+box::use(../global_constant[app_name,model_id_list])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(stats[runif])
 # function to render SQL chat messages into HTML that we can style with CSS
@@ -66,16 +67,18 @@ ui <- function(id, label='chat_gemini'){
     fluidRow(
       column(width=7,
              tags$div(textAreaInput(ns("msg_text"),
-                                    label = NULL,
-                                    width='800px',
-                                    height='60px',
+                                    label = NULL
              ) )),
+      column(width=2,selectInput(ns('model_id'),
+                                 label='',
+                                 choices=model_id_list,
+                                 multiple=TRUE,
+                                 selected=model_id_list[1])),
       column(width=2,
              actionButton(ns("msg_button"),
-                          "发送",
-                          height="30px"),
-             style="display:flex"),
-      hr()
+                          "发送" ),
+             style="display:flex")
+
       ),
     fluidRow(
       column(width=3,
@@ -127,15 +130,19 @@ server <- function(id) {
         send_message(con, 
                      sender=input$msg_username, 
                      content=input$msg_text)
+        # Reactive expression to return selected values
         
-        llm_answer <- get_llm_result(prompt=input$msg_text)
-              
-        send_message(con, 
-                     sender='gemini_pro',
-                     content=llm_answer)
-        
-        messages_db$messages <- read_messages(con)
-        
+         for (id in input$model_id) {
+           llm_answer <- get_llm_result(prompt=input$msg_text,
+                                        model_id = id)
+           
+           send_message(con, 
+                        sender=id,
+                        content=llm_answer)
+           
+           messages_db$messages <- read_messages(con)
+           
+         }
         # clear the message text
         shiny::updateTextInput(inputId = "msg_text",
                                value = "")
