@@ -1,5 +1,5 @@
 box::use(httr2[request, req_perform,
-               resp_status,req_retry,req_error,
+               resp_status,req_retry,req_error,req_timeout, req_dry_run,
                req_body_json, req_user_agent,req_headers,
                req_url_query, req_url_path_append,
                resp_body_json])
@@ -8,6 +8,7 @@ box::use(cachem[cache_disk],
          memoise[memoise])
 box::use(dplyr[as_tibble])
 box::use(rlang[abort,warn])
+box::use(base64enc[base64encode])
 # library(purrr)
 # library(memoise)
 cache_dir <- cache_disk("./cache",max_age = 3600*24)
@@ -18,6 +19,7 @@ req_perform_quick <- memoise(req_perform,cache = cache_dir)
 
 set_llm_conn <- function(
     url = "https://openrouter.ai/api/v1/chat/completions",
+    #url = "https://openrouter.ai/api/v1",
     max_seconds=3
     ) {
 # this is openrouter llm connection 
@@ -25,7 +27,9 @@ set_llm_conn <- function(
   #prompt_mesage <- 'who are you?'
   #model_type='gemini-pro:generateContent' 
   req <- request(url) |>
-    req_headers(Authorization=paste0('Bearer ',api_key))|>
+    req_timeout(20)|>
+    req_headers(
+      Authorization=paste0('Bearer ',api_key) )|>
     req_retry(  max_tries = 3,
                 backoff = ~2) |>
     req_user_agent('shiny_gemini')
@@ -33,17 +37,9 @@ set_llm_conn <- function(
   return(req)
 }
 
-get_json_data <- function(input, model_id=NULL){
+get_json_data <- function(input,select_model){
   
-  # select the model
-  select_model= switch(model_id,
-                       gpt = "openai/gpt-3.5-turbo", 
-                       gpt35 = "openai/gpt-3.5-turbo", 
-                       gpt4 = "openai/gpt-4",
-                       gpt4t = "openai/gpt-4-turbo",
-                       gpt4v = "openai/gpt-4-vision-preview",
-                       gemini ="google/gemini-pro-1.5",
-                       "google/gemini-pro-1.5" )
+
   # prepare the configure
   json_generationConfig = list( temperature = 0.5,
                                 maxOutputTokens = 1024)
@@ -60,6 +56,32 @@ get_json_data <- function(input, model_id=NULL){
   return(json_data)
 }
 
+get_json_img <- function(user_input, img_url, select_model,image_type='file'){
+
+  # prepare the configure
+  json_generationConfig = list( temperature = 0.5,
+                                maxOutputTokens = 1024)
+  image_content =switch(image_type,
+                       file=paste0("data:image/jpeg;base64,", base64encode(img_url)),
+                       url=img_url,
+                       img_url)
+  
+  # prepare the data
+  json_contents <- list(list(role = 'user',
+                             content=list(list(type='text', text=user_input),
+                                          list(type='image_url', 
+                                               image_url=list(url=image_content,
+                                                              detail='auto'))
+                                          ))
+                        )
+  json_max_tokens = 300                                             
+  json_data <- list(model=select_model,
+                    messages = json_contents,
+                    max_tokens = json_max_tokens
+                    #generationConfig = json_generationConfig
+  )
+  return(json_data)
+}
 
 bak_set_llm_conn <- function(
     url='https://generativelanguage.googleapis.com/v1beta/models',
@@ -82,16 +104,36 @@ bak_set_llm_conn <- function(
 
 # get llm service result
 #' @export
-get_llm_result <- function(prompt='hi',model_id='gemini'){
+get_llm_result <- function(prompt='hi',img_url=NULL,model_id='gemini',llm_type='chat'){
   
-
-  post_body <- get_json_data(prompt,model_id)
- 
-  response <- try( set_llm_conn() |>
-                     req_body_json(data=post_body) |>
-                     req_error(is_error = \(resp) FALSE) |>
-                     req_perform()
-                   )
+  # select the model
+  select_model= switch(model_id,
+                       gpt = "openai/gpt-3.5-turbo", 
+                       gpt35 = "openai/gpt-3.5-turbo", 
+                       gpt4 = "openai/gpt-4",
+                       gpt4t = "openai/gpt-4-turbo",
+                       gpt4v = "openai/gpt-4-vision-preview",
+                       gemini ="google/gemini-pro-1.5",
+                       "google/gemini-pro-1.5" )
+  
+  post_body <- switch(llm_type,
+                      chat=get_json_data(prompt,select_model),
+                      img_url=get_json_img(prompt, img_url,select_model,image_type='url'),
+                      img=get_json_img(prompt, img_url,select_model,image_type='file'),
+                      get_json_data(prompt,select_model)
+                      )
+  # setup the request message
+  request <- 
+    set_llm_conn() |>
+    req_body_json(data=post_body,
+                  type = "application/json") |>
+    req_error(is_error = \(resp) FALSE) 
+  
+  # get response while handling the exception 
+  response <- try(  
+    request |>
+     req_perform() )
+  
   if('try-error' %in% class(response)){
     response_message <- 'connection failed! pls check network' 
   } else {

@@ -3,7 +3,7 @@ AI_chatbox, AI对话工具
 navigate, 导航
 ai_chats, AI工具
 chat_echo, 留言板
-chat_gemini, 谷歌AI 
+chat_llm, AI对话 
 chat_AIs, AI抢答
 chat_openai, GPTAI
 chat_debate, AI辩论
@@ -11,3 +11,12 @@ chat_rag, 资料洞察
 chat_voice, 智慧辨音
 chat_image, 智慧识图
 chat_mm, 智慧多模
+vision_llm, AI识图
+ask ai, AI识图
+Prompt, 提示词
+Choose file to upload, 上传文件
+Browse..., 选择文件
+Enter Prompts Here, 请输入提示词
+server connection:, 服务器状态
+failed to detect!!!, 识别失败，请重试！！！
+quick labeling, 请快速识别图像内容

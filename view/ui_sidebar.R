@@ -35,10 +35,10 @@ ui <- function(id,label='sidebar'){
                           
                  ),
                  menuItem(i18n$translate('ai_chats'),icon=icon('dashboard'),startExpanded =T,
-                          menuSubItem(i18n$translate("chat_AIs"), tabName = 'chat_gemini',icon=icon('google'),selected=TRUE),
+                          menuSubItem(i18n$translate("chat_llm"), tabName = 'chat_llm',icon=icon('google')),
+                          menuSubItem(i18n$translate("vision_llm"), tabName = 'vision_llm',icon=icon('image'),selected=TRUE),
                           menuSubItem(i18n$translate("chat_debate"), tabName = 'chat_debate',icon=icon('fire')),
                           menuSubItem(i18n$translate("chat_rag"), tabName = 'chat_rag',icon=icon('file')),
-                          menuSubItem(i18n$translate("chat_image"), tabName = 'chat_image',icon=icon('image')),
                           menuSubItem(i18n$translate("chat_voice"), tabName = 'chat_voice',icon=icon('radio')),
                           menuSubItem(i18n$translate("chat_mm"), tabName = 'chat_mm',icon=icon('bridge'))
                  )  
