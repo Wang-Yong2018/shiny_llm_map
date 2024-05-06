@@ -38,7 +38,7 @@ server <- function(input, output) {
      switch(input$sidebar,
             'chat_echo'=ui_echo$ui('chat_echo'),
             "chat_gemini"= ui_gemini$ui('gemini') ,
-            "chat_openai"= h2('openai Under construction') ,
+            # "chat_openai"= h2('openai Under construction') ,
             "chat_debate"= h2('debate Under construction') ,
             "chat_rag"= h2('rag Under construction') ,
             "chat_image"= h2('image Under construction') ,

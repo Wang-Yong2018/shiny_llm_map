@@ -25,7 +25,7 @@ set_llm_conn <- function(
   #prompt_mesage <- 'who are you?'
   #model_type='gemini-pro:generateContent' 
   req <- request(url) |>
-    req_headers(Authorization='Bearer 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') |>
+    req_headers(Authorization=paste0('Bearer ',api_key))|>
     req_retry(  max_tries = 3,
                 backoff = ~2) |>
     req_user_agent('shiny_gemini')
