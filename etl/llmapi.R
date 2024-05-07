@@ -4,7 +4,7 @@ box::use(httr2[request, req_perform,
                req_url_query, req_url_path_append,
                resp_body_json])
 box::use(purrr[map_dfr, pluck])
-box::use(cachem[cache_disk],
+box::use(cachem[cache_disk,cache_mem],
          memoise[memoise])
 box::use(dplyr[as_tibble])
 box::use(rlang[abort,warn])
@@ -15,6 +15,7 @@ cache_dir <- cache_disk("./cache",max_age = 3600*24)
 
 # build llm connection
 req_perform_quick <- memoise(req_perform,cache = cache_dir)
+
 
 
 set_llm_conn <- function(
@@ -32,7 +33,7 @@ set_llm_conn <- function(
       Authorization=paste0('Bearer ',api_key) )|>
     req_retry(  max_tries = 3,
                 backoff = ~2) |>
-    req_user_agent('shiny_gemini')
+    req_user_agent('shiny_ai')
   
   return(req)
 }
@@ -53,6 +54,35 @@ get_json_data <- function(input,select_model){
                     messages = json_contents#,
                     #generationConfig = json_generationConfig
                     )
+  return(json_data)
+}
+
+get_json_chat_data <- function(prompt, select_model, history=NULL){
+  # this function is used for short memory conversation.
+  # The ai could remember what user said and conversation based on history topic'
+  
+  # prepare the configure
+  json_generationConfig = list( temperature = 0.5,
+                                maxOutputTokens = 1024)
+  # prepare the data
+  user_message <- list(role = 'user',content=prompt)
+  
+  if (is.null(history)) {
+    # inital converation build chat history 
+    json_contents <- list( list(role = 'system',content='你是一个热情，专业的人工智能助理'),
+                           user_message
+                           )
+    } else {
+      # append the new prompt to existed history conversation which stored at history$messages   
+      json_contents <- append(history$messages, list(user_message))
+  
+  }
+  
+  json_data <- list(model=select_model,
+                    messages = json_contents#,
+                    #generationConfig = json_generationConfig
+                    )
+  
   return(json_data)
 }
 
@@ -83,28 +113,10 @@ get_json_img <- function(user_input, img_url, select_model,image_type='file'){
   return(json_data)
 }
 
-bak_set_llm_conn <- function(
-    url='https://generativelanguage.googleapis.com/v1beta/models',
-    max_seconds=3
-    ) {
-  
-  api_key <- Sys.getenv('gemini_api_key')
-  llm_method <- 'gemini-pro:generateContent' 
-  #prompt_message <- 'who are you?'
-  #model_type='gemini-pro:generateContent' 
-  req <- request(url) |>
-    req_url_query(key=api_key) |>
-    req_url_path_append(llm_method) |>
-    req_retry(  max_tries = 3,
-                backoff = ~2) |>
-    req_user_agent('shiny_gemini')
-  #print(req)
-  return(req)
-}
 
 # get llm service result
 #' @export
-get_llm_result <- function(prompt='hi',img_url=NULL,model_id='gemini',llm_type='chat'){
+get_llm_result <- function(prompt='hi',img_url=NULL,model_id='llama',llm_type='chat',history=NULL){
   
   # select the model
   select_model= switch(model_id,
@@ -113,11 +125,13 @@ get_llm_result <- function(prompt='hi',img_url=NULL,model_id='gemini',llm_type='
                        gpt4 = "openai/gpt-4",
                        gpt4t = "openai/gpt-4-turbo",
                        gpt4v = "openai/gpt-4-vision-preview",
-                       gemini ="google/gemini-pro-1.5",
+                       gemini = "google/gemini-pro-1.5",
+                       llama = 'meta-llama/llama-3-8b-instruct:extended',
                        "google/gemini-pro-1.5" )
   
   post_body <- switch(llm_type,
-                      chat=get_json_data(prompt,select_model),
+                      chat=get_json_chat_data(prompt,select_model,history),
+                      answer=get_json_data(prompt,select_model),
                       img_url=get_json_img(prompt, img_url,select_model,image_type='url'),
                       img=get_json_img(prompt, img_url,select_model,image_type='file'),
                       get_json_data(prompt,select_model)
@@ -140,7 +154,7 @@ get_llm_result <- function(prompt='hi',img_url=NULL,model_id='gemini',llm_type='
     response_message <- 
       response |> 
       resp_body_json() |>
-      pluck('choices',1,'message','content')  
+      pluck('choices',1,'message')  
     
     }
   
@@ -167,11 +181,13 @@ list_llm_service <- function(){
 
 # Replace "https://api.labs.google.com/" with the specific Gemini API endpoint you're using
 #' @export
+
 check_llm_connection<- function() {
+  # out of date
 
   is_connected =FALSE 
   
-  resp <- list_llm_service()
+  resp <- get_llm_result()
   
   # Check the response status code (should be 200 for success)
   if (resp|>resp_status() == 200) {
@@ -184,3 +200,20 @@ check_llm_connection<- function() {
  return(is_connected) 
 }
 
+#' @export
+llm_chat <- function( prompt, model_id='llama', history=NULL){
+  
+  # select_model is a fake model_info, it will be actual assigned in get_llm_result function.
+  chat_history <- get_json_chat_data(prompt = prompt, 
+                                     select_model ='llama', 
+                                     history = history)
+  
+  response_message <- get_llm_result(prompt,model_id, history=chat_history,llm_type='chat') 
+  
+  chat_history$messages <- append(chat_history$messages, list(response_message))
+  
+  #text_output <- last_history|>pluck(-1, 'parts',-1,'text') 
+  #chat_history <- list(history=last_history,
+  #                     text_output = text_output)
+  return(chat_history)  
+}

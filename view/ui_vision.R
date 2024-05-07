@@ -100,6 +100,8 @@ server <- function(id) {
                                    llm_type = 'img')
         if (is.null(message)){
           message <- 'failed to detect!!!'
+        }else{
+          message <- message|>pluck(2)
         }
         print("**************************")
         print(paste0(' output is :',message))

@@ -17,11 +17,15 @@ box::use(shiny[NS,
 
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])
-box::use(../etl/llmapi[ get_llm_result, check_llm_connection])
+box::use(../etl/llmapi[ get_llm_result, check_llm_connection,
+                        llm_chat])
 box::use(purrrlyr[by_row],
          purrr[pluck])
 box::use(../global_constant[app_name,model_id_list])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
+box::use(cachem[cache_mem])
+history <- cache_mem()
+
 box::use(stats[runif])
 # function to render SQL chat messages into HTML that we can style with CSS
 # inspired by:
@@ -43,6 +47,7 @@ render_msg_fancy <- function(messages, self_username) {
       class = "chat-container",
       fancy_msg)
 }
+
 
 
 #' @export
@@ -95,7 +100,7 @@ ui <- function(id, label='chat_llm'){
 
 #' @export
 server <- function(id) {
-  moduleServer(id, function(input, output, session) {
+  moduleServer(id, function(input, output, session,chat_history=NULL) {
     shiny::updateTextInput(inputId = "msg_username",
                            value = paste0("八卦之人",
                                           round(runif(n=1, min=1000,max = 9999)),'号'))
@@ -133,8 +138,24 @@ server <- function(id) {
         # Reactive expression to return selected values
         
          for (id in input$model_id) {
-           llm_answer <- get_llm_result(prompt=input$msg_text,
-                                        model_id = id)
+           # llm_answer <- get_llm_result(prompt=input$msg_text,
+           #                              model_id = id)
+           chat_history<-NULL
+           if (!history$exists('chat_history')){
+             chat_history<-NULL
+           }else{ 
+             chat_history <- history$get('chat_history')
+             }
+           
+           chat_history <- llm_chat(prompt=input$msg_text, 
+                                    model_id=id,
+                                    history = chat_history) 
+           
+           history$set('chat_history',chat_history)
+           
+           print("**********************")
+           print(chat_history)
+           llm_answer <- chat_history|> pluck('messages',-1,'content')
            
            send_message(con, 
                         sender=id,
