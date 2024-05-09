@@ -113,6 +113,27 @@ get_json_img <- function(user_input, img_url, select_model,image_type='file'){
   return(json_data)
 }
 
+get_json_call_data <- function(user_input, img_url, select_model,image_type='call'){
+  
+  # prepare the configure
+  json_generationConfig = list( temperature = 0.5,
+                                maxOutputTokens = 1024)
+  # prepare the data
+  json_contents <- list(list(role = 'user',
+                             content=list(list(type='text', text=user_input),
+                                          list(type='image_url', 
+                                               image_url=list(url=image_content,
+                                                              detail='auto'))
+                             ))
+  )
+  json_max_tokens = 300                                             
+  json_data <- list(model=select_model,
+                    messages = json_contents,
+                    max_tokens = json_max_tokens
+                    #generationConfig = json_generationConfig
+  )
+  return(json_data)
+}
 
 # get llm service result
 #' @export
@@ -161,6 +182,7 @@ get_llm_result <- function(prompt='hi',img_url=NULL,model_id='llama',llm_type='c
   
   return(response_message)
 }
+
 
 #' @export 
 fast_get_llm_result <- memoise(get_llm_result,cache=cache_dir)
@@ -216,4 +238,20 @@ llm_chat <- function( prompt, model_id='llama', history=NULL){
   #chat_history <- list(history=last_history,
   #                     text_output = text_output)
   return(chat_history)  
+}
+
+llm_call_funcs <- function(prompt, model_id='llama', history=NULL){
+  # select_model is a fake model_info, it will be actual assigned in get_llm_result function.
+  call_funcs <- get_json_call_data(prompt = prompt, 
+                                   select_model ='llama', 
+                                   history = history)
+  
+  response_message <- get_llm_result(prompt,model_id, history=chat_history,llm_type='call') 
+  
+  chat_history$messages <- append(chat_history$messages, list(response_message))
+  
+  #text_output <- last_history|>pluck(-1, 'parts',-1,'text') 
+  #chat_history <- list(history=last_history,
+  #                     text_output = text_output)
+  return(chat_history)    
 }

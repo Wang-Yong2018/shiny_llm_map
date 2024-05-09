@@ -20,3 +20,4 @@ Enter Prompts Here, 请输入提示词
 server connection:, 服务器状态
 failed to detect!!!, 识别失败，请重试！！！
 quick labeling, 请快速识别图像内容
+analyze the photo feedback the topic and main element list, 识别输入的图片 反馈 1. 图片主题；2. 图中主要元素

@@ -21,7 +21,7 @@ model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v')
 # group key name
 site_var_name <- 'collection_node'
 # site_var_name <- 'site_name'
-
+img_vision_prompt <- 'analyze the photo feedback the topic and main element list'
 
 # data source level
 tbl_name='v_cyd_steam_gap'
