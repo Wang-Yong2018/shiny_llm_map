@@ -2,13 +2,16 @@ box::use(httr2[request, req_perform,
                resp_status,req_retry,req_error,req_timeout, req_dry_run,
                req_body_json, req_user_agent,req_headers,
                req_url_query, req_url_path_append,
-               resp_body_json])
+               resp_body_json],
+         jsonlite[fromJSON, toJSON])
+
 box::use(purrr[map_dfr, pluck])
 box::use(cachem[cache_disk,cache_mem],
          memoise[memoise])
 box::use(dplyr[as_tibble])
 box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
+box::use(../etl/db_api[get_database_info])
 # library(purrr)
 # library(memoise)
 cache_dir <- cache_disk("./cache",max_age = 3600*24)
@@ -37,6 +40,20 @@ set_llm_conn <- function(
   
   return(req)
 }
+
+
+get_select_model_name <- function(model_id) {
+  select_model= switch(model_id,
+                       gpt = "openai/gpt-3.5-turbo", 
+                       gpt35 = "openai/gpt-3.5-turbo", 
+                       gpt4 = "openai/gpt-4",
+                       gpt4t = "openai/gpt-4-turbo",
+                       gpt4v = "openai/gpt-4-vision-preview",
+                       gemini = "google/gemini-pro-1.5",
+                       llama = 'meta-llama/llama-3-8b-instruct:extended',
+                       "google/gemini-pro-1.5" )
+}
+
 
 get_json_data <- function(input,select_model){
   
@@ -140,15 +157,7 @@ get_json_call_data <- function(user_input, img_url, select_model,image_type='cal
 get_llm_result <- function(prompt='hi',img_url=NULL,model_id='llama',llm_type='chat',history=NULL){
   
   # select the model
-  select_model= switch(model_id,
-                       gpt = "openai/gpt-3.5-turbo", 
-                       gpt35 = "openai/gpt-3.5-turbo", 
-                       gpt4 = "openai/gpt-4",
-                       gpt4t = "openai/gpt-4-turbo",
-                       gpt4v = "openai/gpt-4-vision-preview",
-                       gemini = "google/gemini-pro-1.5",
-                       llama = 'meta-llama/llama-3-8b-instruct:extended',
-                       "google/gemini-pro-1.5" )
+
   
   post_body <- switch(llm_type,
                       chat=get_json_chat_data(prompt,select_model,history),
@@ -240,18 +249,67 @@ llm_chat <- function( prompt, model_id='llama', history=NULL){
   return(chat_history)  
 }
 
-llm_call_funcs <- function(prompt, model_id='llama', history=NULL){
-  # select_model is a fake model_info, it will be actual assigned in get_llm_result function.
-  call_funcs <- get_json_call_data(prompt = prompt, 
-                                   select_model ='llama', 
-                                   history = history)
+
+llm_func <- function(prompt='hi'){
+
+  # prepare the data
+  json_contents <- list(list(role = 'user',content=prompt)
+                        # this is a list of messages
+                        
+  )
+  json_function <- fromJSON('./data/tools_config.json',simplifyVector = F) 
   
-  response_message <- get_llm_result(prompt,model_id, history=chat_history,llm_type='call') 
+  json_data <- list(model="openai/gpt-3.5-turbo",
+                    messages = json_contents,
+                    functions= json_function,
+                    function_call='auto'
+                    #generationConfig = json_generationConfig
+  )
+  # setup the request message
+  request <- 
+    set_llm_conn() |>
+    req_body_json(data=json_data,
+                  type = "application/json") |>
+    req_error(is_error = \(resp) FALSE) 
   
-  chat_history$messages <- append(chat_history$messages, list(response_message))
+  # get response while handling the exception 
+  response <- try(  
+    request |>
+      req_perform() )
   
-  #text_output <- last_history|>pluck(-1, 'parts',-1,'text') 
-  #chat_history <- list(history=last_history,
-  #                     text_output = text_output)
-  return(chat_history)    
+  if('try-error' %in% class(response)){
+    response_message <- 'connection failed! pls check network' 
+  } else {
+    response_message <- 
+      response |> 
+      resp_body_json()|> 
+      pluck('choices',1,'message') # R list index from 1
+      # note: in R language, the index is come from 1 instead of 0. In python, it is from 0
+
+    
+  }
+  
+  return(response_message)
+  
+}
+
+get_llm_chat_result<-function(model_id='gpt'){
+  
+  # prepare the llm link
+  conn <- set_llm_conn()
+  # use the default llm connection 
+  
+  # select the llm model
+  model_name <- get_select_model_name(mode_id)
+  
+  # prepare the chat message
+  
+  # prepare the chat function if exists
+  
+  # combine above element into request by httr2
+  
+  # perform the request and handle the exception
+  
+  # extract the message part of of the returned the info
+  
 }

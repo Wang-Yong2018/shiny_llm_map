@@ -85,12 +85,14 @@ def py_chat(prompt, history=None,call_function=False, to_markdown=False):
   
   genai.configure(api_key=api_key)
   model = genai.GenerativeModel('gemini-pro',
-   tools=[add, subtract, mult, div])
+   tools=[ mult])
   
   if history is None:
     history=[]
   
-  chat_id = model.start_chat(history=history,enable_automatic_function_calling=call_function)
+  chat_id = model.start_chat(history=history,
+         
+  enable_automatic_function_calling=True)
   
   response = chat_id.send_message(prompt)
   updated_history = chat_id.history  
