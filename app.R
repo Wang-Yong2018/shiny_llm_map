@@ -12,6 +12,8 @@ box::use(
    ./view/ui_echo,
    ./view/ui_chat,
    ./view/ui_vision,
+   ./view/ui_agent,
+   ./view/ui_sql
 #   ./view/ui_glimpse,
 #   ./view/ui_plot_xy,
 #   ./view/ui_intro,
@@ -42,6 +44,8 @@ server <- function(input, output) {
             "chat_llm"= ui_chat$ui('chat_llm') ,
             "vision_llm"= ui_vision$ui('vision_llm'),#h2('image Under construction') ,
             # "chat_openai"= h2('openai Under construction') ,
+            "agent_llm"= ui_agent$ui('agent_llm') ,
+            "sql_llm"=  h2('debate Under construction') ,
             "chat_debate"= h2('debate Under construction') ,
             "chat_rag"= h2('rag Under construction') ,
             "chat_voice"= h2('voice Under construction') ,

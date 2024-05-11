@@ -1,17 +1,17 @@
-library(DBI)
-library(dplyr)
-library(dbplyr)
-library(RSQLite)
-
+box::use(DBI[dbListTables,dbListFields,dbConnect,dbDisconnect])
+box::use(RPostgres[Postgres],
+         RSQLite[SQLite])
+box::use(purrr[map,imap],
+         stats[setNames])
 
 
 get_database_info<- function(db_name="./data/chinook.db",db_type='sqlite'){
   
   # Connect to SQLite database
   conn <- switch(db_type,
-                sqlite= DBI::dbConnect(RSQLite::SQLite(), db_name),
-                postgresql=DBI::dbConnect(RPostgres),
-                postgres=DBI::dbConnect(RPostgres)
+                sqlite= dbConnect(SQLite(), db_name),
+                postgresql=dbConnect(RPostgres),
+                postgres=dbConnect(RPostgres)
                   )
   # List the tables
   # """Return a list of dicts containing the table name and columns for each table in the database."""

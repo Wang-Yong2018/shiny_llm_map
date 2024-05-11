@@ -157,7 +157,7 @@ get_json_call_data <- function(user_input, img_url, select_model,image_type='cal
 get_llm_result <- function(prompt='hi',img_url=NULL,model_id='llama',llm_type='chat',history=NULL){
   
   # select the model
-
+  select_model <- get_select_model_name(model_id)
   
   post_body <- switch(llm_type,
                       chat=get_json_chat_data(prompt,select_model,history),
@@ -249,8 +249,8 @@ llm_chat <- function( prompt, model_id='llama', history=NULL){
   return(chat_history)  
 }
 
-
-llm_func <- function(prompt='hi'){
+#' @export
+llm_func <- function( prompt, model_id='llama', history=NULL){
 
   # prepare the data
   json_contents <- list(list(role = 'user',content=prompt)
@@ -283,13 +283,19 @@ llm_func <- function(prompt='hi'){
     response_message <- 
       response |> 
       resp_body_json()|> 
-      pluck('choices',1,'message') # R list index from 1
+      pluck('choices',1) # R list index from 1
       # note: in R language, the index is come from 1 instead of 0. In python, it is from 0
-
     
+     
   }
+
+  result <- switch(response_message$finish_reason,
+                   stop=response_message|>pluck('message','content'),
+                   function_call=response_message|>pluck('message','function_call','arguments'),
+                   response_message|>pluck('message','content')
+                   )
   
-  return(response_message)
+  return(result)
   
 }
 
