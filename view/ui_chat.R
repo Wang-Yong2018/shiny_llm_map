@@ -18,7 +18,9 @@ box::use(shiny[NS,
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])
 box::use(../etl/llmapi[ get_llm_result, check_llm_connection,
-                        llm_chat])
+                        llm_chat,
+                        get_ai_result,
+                        get_chat_history,])
 box::use(purrrlyr[by_row],
          purrr[pluck])
 box::use(../global_constant[app_name,model_id_list])
@@ -140,22 +142,29 @@ server <- function(id) {
          for (id in input$model_id) {
            # llm_answer <- get_llm_result(prompt=input$msg_text,
            #                              model_id = id)
-           chat_history<-NULL
            if (!history$exists('chat_history')){
-             chat_history<-NULL
+             last_history<-NULL
            }else{ 
-             chat_history <- history$get('chat_history')
+             last_history <- history$get('chat_history')
              }
            
-           chat_history <- llm_chat(prompt=input$msg_text, 
+           ai_response <- get_llm_result(prompt=input$msg_text, 
                                     model_id=id,
-                                    history = chat_history) 
-           
-           history$set('chat_history',chat_history)
+                                    history = last_history) 
+           #TODO extract response info and build new history
+           last_history <- get_chat_history(input$msg_text,role='user',last_history=last_history)
+           ai_message <- get_ai_result(ai_response)
+           new_history <- get_chat_history(message=ai_message$content,
+                                           role=ai_message$role, 
+                                           last_history=last_history) 
+            
+           history$set('chat_history',new_history)
            
            print("**********************")
            print(chat_history)
-           llm_answer <- chat_history|> pluck('messages',-1,'content')
+           print(ai_message)
+           print(new_history)
+           llm_answer <- ai_message$content
            
            send_message(con, 
                         sender=id,

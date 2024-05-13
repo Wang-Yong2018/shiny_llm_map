@@ -84,17 +84,7 @@ get_json_chat_data <- function(prompt, select_model, history=NULL){
   # prepare the data
   user_message <- list(role = 'user',content=prompt)
   
-  if (is.null(history)) {
-    # inital converation build chat history 
-    json_contents <- list( list(role = 'system',content='你是一个热情，专业的人工智能助理'),
-                           user_message
-                           )
-    } else {
-      # append the new prompt to existed history conversation which stored at history$messages   
-      json_contents <- append(history$messages, list(user_message))
-  
-  }
-  
+  json_contents <- get_chat_history(prompt,role='user',history)
   json_data <- list(model=select_model,
                     messages = json_contents#,
                     #generationConfig = json_generationConfig
@@ -152,21 +142,34 @@ get_json_call_data <- function(user_input, img_url, select_model,image_type='cal
   return(json_data)
 }
 
-# get llm service result
 #' @export
-get_llm_result <- function(prompt='hi',img_url=NULL,model_id='llama',llm_type='chat',history=NULL){
-  
+get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_id='llama', img_url=NULL){
   # select the model
   select_model <- get_select_model_name(model_id)
   
+  # select the post_body 
   post_body <- switch(llm_type,
                       chat=get_json_chat_data(prompt,select_model,history),
                       answer=get_json_data(prompt,select_model),
                       img_url=get_json_img(prompt, img_url,select_model,image_type='url'),
                       img=get_json_img(prompt, img_url,select_model,image_type='file'),
+                      sql=get_json_sql(prompt, select_mode,history),
+                      func=get_json_func(prompt,select_mode,history),
                       get_json_data(prompt,select_model)
-                      )
-  # setup the request message
+  )
+  return(post_body)
+}
+
+# get llm service result
+#' @export
+get_llm_result <- function(prompt='你好，你是谁',
+                           img_url=NULL,
+                           model_id='llama',
+                           llm_type='chat',history=NULL,
+                           DEBUG=TRUE){
+  
+
+  post_body <- get_llm_post_data(prompt,history, llm_type,model_id, img_url)
   request <- 
     set_llm_conn() |>
     req_body_json(data=post_body,
@@ -183,36 +186,62 @@ get_llm_result <- function(prompt='hi',img_url=NULL,model_id='llama',llm_type='c
   } else {
     response_message <- 
       response |> 
-      resp_body_json() |>
-      pluck('choices',1,'message')  
+      resp_body_json() #|>
+      #pluck('choices')  
     
-    }
-  
+  }
+  if (DEBUG==TRUE){
+    print(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
+    print(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
+    
+  }
   
   return(response_message)
 }
 
+#' @export
+get_chat_history <- function(message, role='user', last_history=NULL){
+  # this function is designed to hangle the chat history
+  # case 1: initial chat, 
+    #   setup system role and  prompt
+    #   append the user role and prompt
+  # case 2: record ai response message
+    #  append the assistant role and message
+  # case 3: 2nd, 3rd  and nth user input append
+    # append the user role and message
 
-#' @export 
-fast_get_llm_result <- memoise(get_llm_result,cache=cache_dir)
-
-# list the large lanugage model services list info as data frame
-# two version , list, fast list
-list_llm_service <- function(){
-  df_llm_service <- set_llm_conn() |>
-    req_perform_quick() |>
-    resp_body_json()|>
-    purrr::pluck('models') |>
-    purrr::map_dfr(\(x) as_tibble(x))
-  
-  return(df_llm_service)
+  # If last_history is NULL, initialize the chat history
+  if (is.null(last_history)) {
+    last_history <- list(list(role='system',
+                              content = "你是一个专业的人工智能助理，工作语言是中文。"))
+    
+  } 
+  new_history <- last_history
+  new_history <- c(new_history, list(list(role = role, content = message)))
+      
+  return(new_history)
 }
+  
+#' 
+#' #' @export 
+#' fast_get_llm_result <- memoise(get_llm_result,cache=cache_dir)
+#' 
+#' # list the large lanugage model services list info as data frame
+#' # two version , list, fast list
+#' list_llm_service <- function(){
+#'   df_llm_service <- set_llm_conn() |>
+#'     req_perform_quick() |>
+#'     resp_body_json()|>
+#'     purrr::pluck('models') |>
+#'     purrr::map_dfr(\(x) as_tibble(x))
+#'   
+#'   return(df_llm_service)
+#' }
 
 # Function to check connection with google
 
 # Replace "https://api.labs.google.com/" with the specific Gemini API endpoint you're using
 #' @export
-
 check_llm_connection<- function() {
   # out of date
 
@@ -248,6 +277,8 @@ llm_chat <- function( prompt, model_id='llama', history=NULL){
   #                     text_output = text_output)
   return(chat_history)  
 }
+
+
 
 #' @export
 llm_func <- function( prompt, model_id='llama', history=NULL){
@@ -299,23 +330,35 @@ llm_func <- function( prompt, model_id='llama', history=NULL){
   
 }
 
-get_llm_chat_result<-function(model_id='gpt'){
+#' @export
+get_ai_result <- function(ai_response,ai_type='chat'){
   
-  # prepare the llm link
-  conn <- set_llm_conn()
-  # use the default llm connection 
+  ai_message <- ai_response |> pluck('choices',1,'message')
   
-  # select the llm model
-  model_name <- get_select_model_name(mode_id)
-  
-  # prepare the chat message
-  
-  # prepare the chat function if exists
-  
-  # combine above element into request by httr2
-  
-  # perform the request and handle the exception
-  
-  # extract the message part of of the returned the info
-  
+  ai_result <- switch(ai_type,
+                      # chat_type
+                      chat <- list(role=ai_message$role, content=ai_message$content)
+                      )
+  return(ai_result)
 }
+# 
+# get_llm_chat_result<-function(model_id='gpt'){
+#   
+#   # prepare the llm link
+#   conn <- set_llm_conn()
+#   # use the default llm connection 
+#   
+#   # select the llm model
+#   model_name <- get_select_model_name(mode_id)
+#   
+#   # prepare the chat message
+#   
+#   # prepare the chat function if exists
+#   
+#   # combine above element into request by httr2
+#   
+#   # perform the request and handle the exception
+#   
+#   # extract the message part of of the returned the info
+#   
+# }
