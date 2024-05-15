@@ -20,7 +20,7 @@ box::use(purrrlyr[by_row],
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(stats[runif])
 box::use(../global_constant[app_name,model_id_list,img_vision_prompt])
-box::use(../etl/llmapi[ get_llm_result, check_llm_connection])
+box::use(../etl/llmapi[ get_llm_result, check_llm_connection,get_ai_result])
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])
 
@@ -54,27 +54,27 @@ ui <- function(id, label='vision_llm'){
                   height='auto') )
     ),
    ), 
-   column(width=1),
-   column(width=5,
-   fluidRow(
-      textAreaInput(
-        inputId = ns('prompt'),
-        label = i18n$translate('Prompt'),
-        value= i18n$translate(img_vision_prompt),
-        placeholder = i18n$translate('Enter Prompts Here')
-      ),
-      actionButton(ns('goButton'), i18n$translate('ask ai')),
-      div()
-      ) ,
-    fluidRow(
-      #textOutput(ns('server_status') ),
-      div()
-    ),
-    fluidRow(
-      #style = 'border: solid 1px blue; min-height: 100px;',     
-      uiOutput(ns('text1'))
-
-    )        
+  
+   column(width=4,
+          fluidRow(
+            textAreaInput(
+              inputId = ns('prompt'),
+              label = i18n$translate('Prompt'),
+              value= i18n$translate(img_vision_prompt),
+              placeholder = i18n$translate('Enter Prompts Here')
+            ),
+            actionButton(ns('goButton'), i18n$translate('ask ai')),
+            div()
+          ) ,
+          fluidRow(
+            #textOutput(ns('server_status') ),
+            div()
+          ),
+          fluidRow(
+            #style = 'border: solid 1px blue; min-height: 100px;',     
+            uiOutput(ns('text1'))
+            
+          )        
    ))
   }
 
@@ -102,12 +102,13 @@ server <- function(id) {
                                    img_url=input$file$datapath,
                                    model_id='gemini',
                                    llm_type = 'img')
+        
         if (is.null(message)){
           message <- 'failed to detect!!!'
         }else{
           print(message)
-          
-          fancy_vision_message = markdown(message|>pluck(2))
+          ai_message <- get_ai_result(message,ai_type='img')   
+          fancy_vision_message = markdown(ai_message$content)
         }
         print("**************************")
         print(paste0(' output is :',fancy_vision_message))
