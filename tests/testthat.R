@@ -7,6 +7,6 @@
 # * https://testthat.r-lib.org/articles/special-files.html
 
 library(testthat)
-library(shiny_chatbox_gemini)
+# library(shiny_chatbox_gemini)
 
 test_check("shiny_chatbox_gemini")
