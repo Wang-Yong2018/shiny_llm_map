@@ -1,3 +1,4 @@
 messages.sqlite
 echo.sqlite
 gemini.sqlite
+*sqlite
