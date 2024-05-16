@@ -22,4 +22,6 @@ Enter Prompts Here, 请输入提示词
 server connection:, 服务器状态
 failed to detect!!!, 识别失败，请重试！！！
 quick labeling, 请快速识别图像内容
+vision mode list, 图像识别模型
 analyze the photo feedback the topic and main element list, 识别输入的图片 反馈 1. 图片主题；2. 图中主要元素
+As a image tag and classification expert pls help to analyse the image. Provide follow output:\n1. main topic tag and elements list\n2. using markdown format\n, 作为图像识别专家，请分析图像并提供如下结果：\n1. 图片主题和主要元素清单 \n2.使用markdown 格式输出

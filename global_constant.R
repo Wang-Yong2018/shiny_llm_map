@@ -11,7 +11,7 @@ box::use(shiny.i18n[Translator])
 
 i18n<- Translator$new(translation_csvs_path = "./translation/")
 i18n$set_translation_language(app_language)
-debug <- TRUE
+IS_DEBUG <- FALSE 
 # app level
 app_name <- i18n$translate('AI_chatbox')
 # time series name
@@ -21,7 +21,8 @@ model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v')
 # group key name
 site_var_name <- 'collection_node'
 # site_var_name <- 'site_name'
-img_vision_prompt <- 'analyze the photo feedback the topic and main element list'
+vision_model_list <-c('gemini','gpt4v')
+img_vision_prompt <- "As a image tag and classification expert, pls help to analyse the image. Provide follow output:\n1. main topic tag and elements list\n2. using markdown format\n"
 
 # data source level
 tbl_name='v_cyd_steam_gap'

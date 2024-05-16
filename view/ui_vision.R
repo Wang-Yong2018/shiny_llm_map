@@ -27,7 +27,7 @@ box::use(../etl/chat_api[db_connect,
 box::use(../etl/img_tools[resize_image])
 
 # language config
-box::use(../global_constant[app_name,app_language])
+box::use(../global_constant[app_name,app_language,vision_model_list])
 box::use(shiny.i18n[Translator])
 i18n<- Translator$new(translation_csvs_path = "./translation/")
 i18n$set_translation_language(app_language)
@@ -38,45 +38,46 @@ ui <- function(id, label='vision_llm'){
   ns <- NS(id)
   
   fluidPage(
-   column(width=6,
     fluidRow(
-      fileInput(
-        inputId = ns('file'),
-        label = i18n$translate('Choose file to upload'),
-        buttonLabel =i18n$translate('Browse...'),
-      )
-    ),
+      column(width=6,
+             fileInput(
+               inputId = ns('file'),
+               label = i18n$translate('Choose file to upload'),
+               buttonLabel =i18n$translate('Browse...'),
+             )),
+      column(width=6,
+             textAreaInput(
+               inputId = ns('prompt'),
+               label = i18n$translate('Prompt'),
+               value= i18n$translate(img_vision_prompt),
+               placeholder = i18n$translate('Enter Prompts Here') )
+             
+      )),
     fluidRow(
-      div(
-      style = 'border: solid 1px blue;',
-      imageOutput(outputId = ns('image1'),
-                  width='100%',
-                  height='auto') )
+      column(width=6,selectInput(ns('model_id'),
+                                 label= i18n$translate('vision mode list'),
+                                 choices=vision_model_list,
+                                 multiple=FALSE,
+                                 selected='gemini')),
+      column(width=6,
+             actionButton(ns('goButton'), i18n$translate('ask ai')) ),
+   
+    ) ,
+    fluidRow(
+      column(width=6,
+             div( style = 'border: solid 1px black;',
+                  imageOutput(outputId = ns('image1'),
+                              width='50%',
+                              height='auto') 
+             ) 
+      ),
+      column(width=6,
+             style = 'border: solid 1px black; min-height: 100px;',     
+             uiOutput(ns('text1')) )
+      
     ),
-   ), 
-  
-   column(width=4,
-          fluidRow(
-            textAreaInput(
-              inputId = ns('prompt'),
-              label = i18n$translate('Prompt'),
-              value= i18n$translate(img_vision_prompt),
-              placeholder = i18n$translate('Enter Prompts Here')
-            ),
-            actionButton(ns('goButton'), i18n$translate('ask ai')),
-            div()
-          ) ,
-          fluidRow(
-            #textOutput(ns('server_status') ),
-            div()
-          ),
-          fluidRow(
-            #style = 'border: solid 1px blue; min-height: 100px;',     
-            uiOutput(ns('text1'))
-            
-          )        
-   ))
-  }
+  )
+}
 
 
 #' @export
@@ -100,7 +101,7 @@ server <- function(id) {
         print(paste0(' input is :',input$prompt))
         message <-  get_llm_result(prompt=input$prompt,
                                    img_url=input$file$datapath,
-                                   model_id='gemini',
+                                   model_id=input$model_id,
                                    llm_type = 'img')
         
         if (is.null(message)){

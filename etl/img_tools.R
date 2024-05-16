@@ -4,7 +4,7 @@ box::use(magick[image_info,
 
 
 
-resize_image <- function(img_path,max_width=600,max_height=400) {
+resize_image <- function(img_path,max_width=400,max_height=300) {
   # resize he image to max_width* max_height size 
   # load image
   img_content <- image_read(img_path)

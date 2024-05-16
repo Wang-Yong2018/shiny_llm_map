@@ -12,6 +12,7 @@ box::use(dplyr[as_tibble])
 box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
 box::use(../etl/db_api[get_database_info])
+box::use(../global_constant[IS_DEBUG])
 # library(purrr)
 # library(memoise)
 cache_dir <- cache_disk("./cache",max_age = 3600*24)
@@ -133,6 +134,7 @@ get_json_call_data <- function(user_input, img_url, select_model,image_type='cal
                                                               detail='auto'))
                              ))
   )
+  #TO MAX_TOKEN was used to limit the chat ai words. IF it is image, it will be exceed.
   json_max_tokens = 300                                             
   json_data <- list(model=select_model,
                     messages = json_contents,
@@ -166,7 +168,7 @@ get_llm_result <- function(prompt='你好，你是谁',
                            img_url=NULL,
                            model_id='llama',
                            llm_type='chat',history=NULL,
-                           DEBUG=TRUE){
+                           DEBUG=IS_DEBUG){
   
 
   post_body <- get_llm_post_data(prompt,history, llm_type,model_id, img_url)
@@ -190,7 +192,7 @@ get_llm_result <- function(prompt='你好，你是谁',
       #pluck('choices')  
     
   }
-  if (DEBUG==TRUE){
+  if (IS_DEBUG==TRUE){
     print(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
     print(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
     
