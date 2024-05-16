@@ -330,6 +330,7 @@ llm_func <- function( prompt, model_id='llama', history=NULL){
   
 }
 
+
 #' @export
 get_ai_result <- function(ai_response,ai_type='chat'){
   
@@ -337,28 +338,8 @@ get_ai_result <- function(ai_response,ai_type='chat'){
   
   ai_result <- switch(ai_type,
                       # chat_type
-                      chat <- list(role=ai_message$role, content=ai_message$content)
+                      chat = list(role=ai_message$role, content=ai_message$content),
+                      img  = list(role=ai_message$role,content=ai_message$content)
                       )
   return(ai_result)
 }
-# 
-# get_llm_chat_result<-function(model_id='gpt'){
-#   
-#   # prepare the llm link
-#   conn <- set_llm_conn()
-#   # use the default llm connection 
-#   
-#   # select the llm model
-#   model_name <- get_select_model_name(mode_id)
-#   
-#   # prepare the chat message
-#   
-#   # prepare the chat function if exists
-#   
-#   # combine above element into request by httr2
-#   
-#   # perform the request and handle the exception
-#   
-#   # extract the message part of of the returned the info
-#   
-# }
