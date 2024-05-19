@@ -157,6 +157,7 @@ get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_i
                       img=get_json_img(prompt, img_url,select_model,image_type='file'),
                       sql=get_json_sql(prompt, select_mode,history),
                       func=get_json_func(prompt,select_mode,history),
+                      agent=get_json_func(prompt,select_mode,history),
                       get_json_data(prompt,select_model)
   )
   return(post_body)

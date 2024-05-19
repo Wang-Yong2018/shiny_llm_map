@@ -12,7 +12,7 @@ test_that("chat with google gemini", {
 
 test_that("chat with openai ", {
   expect <- 'GPT|gpt'
-  actual <- get_llm_result('are you openAI GPT?',model_id='gpt4',llm_type='chat')
+  actual <- get_llm_result('are you openAI GPT?',model_id='gpt',llm_type='chat')
   compare_result <- grepl(expect, actual) 
   expect_match(actual, expect)
 })
