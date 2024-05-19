@@ -1,6 +1,7 @@
 [
     {
         "name": "extract_student_info",
+        "chinese_name": "提取学生信息",
         "description": "Get the student information from the body of the input text",
         "parameters": {
             "type": "object",
@@ -37,6 +38,7 @@
     },
     {
         "name": "extract_calculation_input",
+        "chinese_name": "提取计算公式",
         "description": "extract the mathmatical functions and two numberic numbers ",
         "parameters": {
             "type": "object",
