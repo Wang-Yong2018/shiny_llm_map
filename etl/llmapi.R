@@ -24,7 +24,6 @@ req_perform_quick <- memoise(req_perform,cache = cache_dir)
 
 set_llm_conn <- function(
     url = "https://openrouter.ai/api/v1/chat/completions",
-    #url = "https://openrouter.ai/api/v1",
     max_seconds=3
     ) {
 # this is openrouter llm connection 
@@ -53,153 +52,7 @@ get_select_model_name <- function(model_id) {
                        gemini = "google/gemini-pro-1.5",
                        llama = 'meta-llama/llama-3-8b-instruct:extended',
                        "google/gemini-pro-1.5" )
-}
-
-
-get_json_data <- function(input,select_model){
-  
-
-  # prepare the configure
-  json_generationConfig = list( temperature = 0.5,
-                                maxOutputTokens = 1024)
-  # prepare the data
-  json_contents <- list(list(role = 'user',content=input)
-                                         # this is a list of messages
-                                         
-                                         )
-  
-  json_data <- list(model=select_model,
-                    messages = json_contents#,
-                    #generationConfig = json_generationConfig
-                    )
-  return(json_data)
-}
-
-get_json_chat_data <- function(prompt, select_model, history=NULL){
-  # this function is used for short memory conversation.
-  # The ai could remember what user said and conversation based on history topic'
-  
-  # prepare the configure
-  json_generationConfig = list( temperature = 0.5,
-                                maxOutputTokens = 1024)
-  # prepare the data
-  user_message <- list(role = 'user',content=prompt)
-  
-  json_contents <- get_chat_history(prompt,role='user',history)
-  json_data <- list(model=select_model,
-                    messages = json_contents#,
-                    #generationConfig = json_generationConfig
-                    )
-  
-  return(json_data)
-}
-
-get_json_img <- function(user_input, img_url, select_model,image_type='file'){
-
-  # prepare the configure
-  json_generationConfig = list( temperature = 0.5,
-                                maxOutputTokens = 1024)
-  image_content =switch(image_type,
-                       file=paste0("data:image/jpeg;base64,", base64encode(img_url)),
-                       url=img_url,
-                       img_url)
-  
-  # prepare the data
-  json_contents <- list(list(role = 'user',
-                             content=list(list(type='text', text=user_input),
-                                          list(type='image_url', 
-                                               image_url=list(url=image_content,
-                                                              detail='auto'))
-                                          ))
-                        )
-  json_max_tokens = 300                                             
-  json_data <- list(model=select_model,
-                    messages = json_contents,
-                    max_tokens = json_max_tokens
-                    #generationConfig = json_generationConfig
-  )
-  return(json_data)
-}
-
-get_json_call_data <- function(user_input, img_url, select_model,image_type='call'){
-  
-  # prepare the configure
-  json_generationConfig = list( temperature = 0.5,
-                                maxOutputTokens = 1024)
-  # prepare the data
-  json_contents <- list(list(role = 'user',
-                             content=list(list(type='text', text=user_input),
-                                          list(type='image_url', 
-                                               image_url=list(url=image_content,
-                                                              detail='auto'))
-                             ))
-  )
-  #TO MAX_TOKEN was used to limit the chat ai words. IF it is image, it will be exceed.
-  json_max_tokens = 300                                             
-  json_data <- list(model=select_model,
-                    messages = json_contents,
-                    max_tokens = json_max_tokens
-                    #generationConfig = json_generationConfig
-  )
-  return(json_data)
-}
-
-#' @export
-get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_id='llama', img_url=NULL){
-  # select the model
-  select_model <- get_select_model_name(model_id)
-  
-  # select the post_body 
-  post_body <- switch(llm_type,
-                      chat=get_json_chat_data(prompt,select_model,history),
-                      answer=get_json_data(prompt,select_model),
-                      img_url=get_json_img(prompt, img_url,select_model,image_type='url'),
-                      img=get_json_img(prompt, img_url,select_model,image_type='file'),
-                      sql=get_json_sql(prompt, select_mode,history),
-                      func=get_json_func(prompt,select_mode,history),
-                      agent=get_json_func(prompt,select_mode,history),
-                      get_json_data(prompt,select_model)
-  )
-  return(post_body)
-}
-
-# get llm service result
-#' @export
-get_llm_result <- function(prompt='你好，你是谁',
-                           img_url=NULL,
-                           model_id='llama',
-                           llm_type='chat',history=NULL,
-                           DEBUG=IS_DEBUG){
-  
-
-  post_body <- get_llm_post_data(prompt,history, llm_type,model_id, img_url)
-  request <- 
-    set_llm_conn() |>
-    req_body_json(data=post_body,
-                  type = "application/json") |>
-    req_error(is_error = \(resp) FALSE) 
-  
-  # get response while handling the exception 
-  response <- try(  
-    request |>
-     req_perform() )
-  
-  if('try-error' %in% class(response)){
-    response_message <- 'connection failed! pls check network' 
-  } else {
-    response_message <- 
-      response |> 
-      resp_body_json() #|>
-      #pluck('choices')  
-    
-  }
-  if (IS_DEBUG==TRUE){
-    print(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
-    print(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
-    
-  }
-  
-  return(response_message)
+  return(select_model)
 }
 
 #' @export
@@ -225,6 +78,178 @@ get_chat_history <- function(message, role='user', last_history=NULL){
   return(new_history)
 }
   
+
+get_json_data <- function(user_input,select_model){
+  
+
+  # # prepare the configure
+  # json_generationConfig = list( temperature = 0.5,
+  #                               maxOutputTokens = 1024)
+  # prepare the data
+  json_contents <- list(list(role = 'user',content=user_input)
+                                         # this is a list of messages
+                                         
+                                         )
+  
+  json_data <- list(model=select_model,
+                    messages = json_contents#,
+                    #generationConfig = json_generationConfig
+                    )
+  return(json_data)
+}
+
+get_json_chat_data <- function(user_input, select_model, history=NULL){
+  # this function is used for short memory conversation.
+  # The ai could remember what user said and conversation based on history topic'
+  
+  # # prepare the configure
+  # json_generationConfig = list( temperature = 0.5,
+  #                               maxOutputTokens = 1024)
+  # prepare the data
+  # user_message <- list(role = 'user',content=user_input)
+  
+  json_contents <- get_chat_history(user_input,role='user',history)
+  json_data <- list(model=select_model,
+                    messages = json_contents#,
+                    #generationConfig = json_generationConfig
+                    )
+  
+  return(json_data)
+}
+
+get_json_img <- function(user_input, img_url, select_model,image_type='file'){
+
+  # # prepare the configure
+  # json_generationConfig = list( temperature = 0.5,
+  #                               maxOutputTokens = 1024)
+  image_content =switch(image_type,
+                       file=paste0("data:image/jpeg;base64,", base64encode(img_url)),
+                       url=img_url,
+                       img_url)
+  
+  # prepare the data
+  json_contents <- list(list(role = 'user',
+                             content=list(list(type='text', text=user_input),
+                                          list(type='image_url', 
+                                               image_url=list(url=image_content,
+                                                              detail='auto'))
+                                          ))
+                        )
+  json_max_tokens = 300                                             
+  json_data <- list(model=select_model,
+                    messages = json_contents,
+                    max_tokens = json_max_tokens
+                    #generationConfig = json_generationConfig
+  )
+  return(json_data)
+}
+
+#' @export
+get_json_agent <- function(user_input, select_model,funcs_json){
+  
+  # prepare the configure
+  # json_generationConfig = list( temperature = 0.5,
+  #                               maxOutputTokens = 1024)
+  # prepare the data
+  json_contents <- list(list(role='user', content=user_input) )
+  
+  #func_json
+  # TODO: there should be some code to validate the json of function 
+  
+  json_data <- list(model=select_model,
+                    messages = json_contents,
+                    functions= funcs_json,
+                    function_call='auto'
+                    )
+  return(json_data)
+}
+
+
+# get_json_call_data <- function(user_input, img_url, select_model,image_type='call'){
+#   
+#   # prepare the configure
+#   json_generationConfig = list( temperature = 0.5,
+#                                 maxOutputTokens = 1024)
+#   # prepare the data
+#   json_contents <- list(list(role = 'user',
+#                              content=list(list(type='text', text=user_input),
+#                                           list(type='image_url', 
+#                                                image_url=list(url=image_content,
+#                                                               detail='auto'))
+#                              ))
+#   )
+#   #TO MAX_TOKEN was used to limit the chat ai words. IF it is image, it will be exceed.
+#   json_max_tokens = 300                                             
+#   json_data <- list(model=select_model,
+#                     messages = json_contents,
+#                     max_tokens = json_max_tokens
+#                     #generationConfig = json_generationConfig
+#   )
+#   return(json_data)
+# }
+
+#' @export
+get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_id='llama', img_url=NULL,funcs_json=NULL){
+  # select the model
+  select_model <- get_select_model_name(model_id)
+  
+  # select the post_body 
+  post_body <- switch(llm_type,
+                      chat=get_json_chat_data(user_input=prompt,select_model=select_model,history=history),
+                      answer=get_json_data(user_input=prompt,select_model=select_model),
+                      img_url=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model,image_type='url'),
+                      img=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model, image_type='file'),
+                      #sql=get_json_sql(user_input=prompt,select_model=select_model,history=history),
+                      #func=get_json_func(user_input=prompt,select_model=select_model,history=history),
+                      agent=get_json_agent(user_input=prompt,select_model=select_model,funcs_json=funcs_json),
+                      get_json_data(user_input=prompt,select_model=select_model)
+  )
+  return(post_body)
+}
+
+# get llm service result
+#' @export
+get_llm_result <- function(prompt='你好，你是谁',
+                           img_url=NULL,
+                           model_id='llama',
+                           llm_type='chat',
+                           history=NULL,
+                           funcs_json=NULL,
+                           is_debug=IS_DEBUG){
+  
+
+  post_body <- get_llm_post_data(prompt=prompt,history=history, 
+                                 llm_type=llm_type,model_id=model_id, 
+                                 img_url=img_url,funcs_json = funcs_json)
+  request <- 
+    set_llm_conn() |>
+    req_body_json(data=post_body,
+                  type = "application/json") |>
+    req_error(is_error = \(resp) FALSE) 
+  
+  # get response while handling the exception 
+  response <- try(  
+    request |>
+     req_perform() )
+  
+  if('try-error' %in% class(response)){
+    response_message <- 'connection failed! pls check network' 
+  } else {
+    response_message <- 
+      response |> 
+      resp_body_json() #|>
+      #pluck('choices')  
+    
+  }
+  if (is_debug==TRUE){
+    print(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
+    print(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
+    
+  }
+  
+  return(response_message)
+}
+
 #' 
 #' #' @export 
 #' fast_get_llm_result <- memoise(get_llm_result,cache=cache_dir)
@@ -248,19 +273,19 @@ get_chat_history <- function(message, role='user', last_history=NULL){
 check_llm_connection<- function() {
   # out of date
 
-  is_connected =FALSE 
-  
-  resp <- get_llm_result()
-  
-  # Check the response status code (should be 200 for success)
-  if (resp|>resp_status() == 200) {
-    cat(paste0(url,' ', "Connection successful!\n"))
-    is_connected=TRUE
-  } else {
-    cat(paste0(url,' ', "Connection failed with status code:", response$status, "\n"))
-    is_connected=TRUE
-  }
- return(is_connected) 
+ #  is_connected =FALSE 
+ #  
+ #  resp <- get_llm_result()
+ #  
+ #  # Check the response status code (should be 200 for success)
+ #  if (resp|>resp_status() == 200) {
+ #    cat(paste0(url,' ', "Connection successful!\n"))
+ #    is_connected=TRUE
+ #  } else {
+ #    cat(paste0(url,' ', "Connection failed with status code:", response$status, "\n"))
+ #    is_connected=TRUE
+ #  }
+ # return(is_connected) 
 }
 
 #' @export
@@ -342,7 +367,8 @@ get_ai_result <- function(ai_response,ai_type='chat'){
   ai_result <- switch(ai_type,
                       # chat_type
                       chat = list(role=ai_message$role, content=ai_message$content),
-                      img  = list(role=ai_message$role,content=ai_message$content)
+                      img  = list(role=ai_message$role,content=ai_message$content),
+                      agent = list(role=ai_message$role, content=ai_message$function_call)
                       )
   return(ai_result)
 }

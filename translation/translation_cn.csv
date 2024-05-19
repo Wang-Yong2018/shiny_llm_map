@@ -4,7 +4,7 @@ navigate, 导航
 ai_chats, AI工具
 chat_echo, 留言板
 chat_llm, AI对话 
-agent_llm, AI智能体
+agent_llm, AI代理
 sql_llm, AI查数
 chat_AIs, AI抢答
 chat_openai, GPTAI

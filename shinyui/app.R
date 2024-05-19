@@ -10,6 +10,7 @@
 library(shiny)
 library(jsonlite)
 library(purrr)
+source('../etl/llmapi.R')
 all_funcs_json <- read_json('../data/tools_config.json',simplifyVector = F)
 func_chinese_name <-   all_funcs_json|> map_chr(pluck('chinese_name'))
 
@@ -103,13 +104,11 @@ server <- function(input, output,session) {
   # based on the selectInput to the function definiton
   get_func_definition <- reactive(
     all_funcs_json |> 
-      keep(function(x) pluck(x, 'chinese_name') == input$func_selector)|>
-      pluck(1)
-    
+      keep(function(x) pluck(x, 'chinese_name') == input$func_selector) |>
+      toJSON(auto_unbox = T, pretty=T)
   )
   output$txt_json_config <-renderPrint({
-    get_func_definition()|>
-      toJSON(auto_unbox = T, pretty=T)
+    get_func_definition()
     })
 
   output$txt_json_feedback <- renderText({ 'this is json feedback' })
@@ -117,13 +116,18 @@ server <- function(input, output,session) {
     message <-  get_llm_result(prompt=input$prompt,
                                #img_url=input$file$datapath,
                                model_id=input$model_id,
-                               llm_type = 'agent')
+                               llm_type = 'agent',
+                               funcs_json = get_func_definition())
+    
     
     if (is.null(message)){
       message <- 'failed to detect!!!'
     }else{
       print(message)
-      ai_message <- get_ai_result(message,ai_type='img')   
+      ai_message <- 
+        get_ai_result(message,ai_type='agent')  |>
+        toJSON(pretty=T,auto_unbox = T)
+      
       fancy_vision_message = markdown(ai_message$content)
     }
     print("**************************")

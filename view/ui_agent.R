@@ -6,8 +6,8 @@ box::use(shiny[NS,
                renderImage,
                tags,
                titlePanel,
-               uiOutput,
-               textInput, textOutput,
+               uiOutput,renderPrint,
+               textInput, textOutput,verbatimTextOutput,
                selectInput,
                textAreaInput,
                actionButton,
@@ -17,37 +17,25 @@ box::use(shiny[NS,
 
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])
-box::use(../etl/llmapi[ get_llm_result, check_llm_connection,
-                        llm_chat,
-                        llm_func])
+box::use(../etl/llmapi[ get_llm_result,
+                        check_llm_connection,
+                        #llm_chat,
+                        get_ai_result])
 box::use(purrrlyr[by_row],
-         purrr[pluck])
-box::use(../global_constant[app_name,model_id_list])
+         purrr[pluck,map_chr, keep])
+box::use(../global_constant[app_name,model_id_list,app_language])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(cachem[cache_mem])
+box::use(jsonlite[read_json, toJSON,fromJSON])
 history <- cache_mem()
+box::use(shiny.i18n[Translator])
+i18n<- Translator$new(translation_csvs_path = "./translation/")
+i18n$set_translation_language(app_language)
 
 box::use(stats[runif])
-# function to render SQL chat messages into HTML that we can style with CSS
-# inspired by:
-# https://www.r-bloggers.com/2017/07/shiny-chat-in-few-lines-of-code-2/
+all_funcs_json <- read_json('./data/tools_config.json',simplifyVector = F)
+func_chinese_name <-   all_funcs_json|> map_chr(pluck('chinese_name'))
 
-render_msg_fancy <- function(messages, self_username) {
-  fancy_msg <- 
-    messages|> 
-    by_row(~ div(class =  if_else(
-      .$username == self_username,
-      "chat-message-left", "chat-message-right"),
-      a(class = "username", .$username),
-      div(class = "message", .$message),
-      div(class = "datetime", .$datetime)
-    )) |>
-    pluck('.out')
-  
-  div(id = "chat-container",
-      class = "chat-container",
-      fancy_msg)
-}
 
 
 
@@ -56,45 +44,72 @@ ui <- function(id, label='agent_llm'){
   ns <- NS(id)
 
   fluidPage(
+     titlePanel("LLM agent playgroud"),
+     #ns <- NS(id),
      tags$head(
-        tags$script(src = "script.js"),
-        tags$link(rel = "stylesheet", type = "text/css", href = "styling.css")
-      ),
-
-    #Application title
-
-    #tags$div(uiOutput(ns("messages_fancy"))),
-    #tags$div(textOutput(ns('messages_fany'))),
-    fluidRow(
-     id = "chatbox-container",
-     uiOutput(ns("messages_fancy"))
-      
-    ),
-    fluidRow(
-      column(width=7,
-             tags$div(textAreaInput(ns("msg_text"),
-                                    label = NULL
-             ) )),
-      column(width=2,selectInput(ns('model_id'),
-                                 label='',
-                                 choices=model_id_list,
-                                 multiple=TRUE,
-                                 selected=model_id_list[1])),
-      column(width=2,
-             actionButton(ns("msg_button"),
-                          "发送" ),
-             style="display:flex")
-
-      ),
-    fluidRow(
-      column(width=3,
-             textInput(ns("msg_username"), "用户名:", value = "八卦之人" )
-             ),
-      column(width=2,
-             actionButton(ns("msg_clearchat"), "清除对话")
-             )
-    )
-
+       tags$script(src = "script.js"),
+       tags$link(rel = "stylesheet", type = "text/css", href = "styling.css")
+     ),
+     #Sidebar with a slider input for number of bins
+     fluidRow(
+       id = "chatbox-container",
+       column(width= 5,
+              #  style = 'border: solid 0.1px grey; min-height: 100px;',  
+              textAreaInput(inputId = ns("prompt"), 
+                            label = "prompt_input:", rows = 2, cols = 30)
+       ),
+       column(width=1),
+       column(width=6,
+              style = 'border: solid 0.1px grey; min-height: 100px;',  
+              textOutput(inline=TRUE,
+                         #label = 'AI feedback',
+                         outputId = ns('ai_output')#,value = 'AI feedback'
+              )
+       )
+     ),
+     fluidRow(
+       column( width=6,
+               actionButton( ns('goButton'), i18n$translate('ask ai')) 
+               )
+     ),
+     
+     fluidRow(
+       column(
+         width = 2,
+         selectInput(inputId =   ns('func_selector'),
+           #'func_selector',
+           label = '代理清单',
+           choices = func_chinese_name,
+           selected= func_chinese_name[1]
+         )
+       ),
+       column(
+         width = 2,
+         selectInput(inputId =  ns('model_id'),
+          # 'model_id',
+           label = '可用模型清单',
+           choices =model_id_list,
+           selected = 'gpt35' )
+       )
+       
+     ),
+     fluidRow(
+       column(width= 6,
+              style = 'border: solid 0.1px grey; min-height: 100px;', 
+              verbatimTextOutput(
+                outputId = ns('txt_json_config'),
+                #'txt_json_config'#, value = 'hi,this for show the json function definition'
+              )
+       ),
+       column(width=6,
+              style = 'border: solid 0.1px grey; min-height: 100px;',  
+              uiOutput(
+                outputId = ns('txt_json_feedback'),
+                #'txt_json_feedback'#, value = 'hi, this for show the json parameter from LLMAI'
+              )
+       )
+       
+     )
     
 )}
 
@@ -102,76 +117,47 @@ ui <- function(id, label='agent_llm'){
 #' @export
 server <- function(id) {
   moduleServer(id, function(input, output, session,chat_history=NULL) {
-    shiny::updateTextInput(inputId = "msg_username",
-                           value = paste0("八卦之人",
-                                          round(runif(n=1, min=1000,max = 9999)),'号'))
     
-    con <- db_connect(model_db='gemini')
-    
-    # set up our messages data locally
-    messages_db <- reactiveValues(messages = read_messages(con))
-    
-    # look for new messages every n milliseconds
-    db_check_timer <- shiny::reactiveTimer(intervalMs = 1000)
-    
-    observe({
-      db_check_timer()
-    #  if (debug) message("checking table...")
-      messages_db$messages <- read_messages(con)
-      
+    # based on the selectInput to the function definiton
+    get_func_definition <- reactive(
+      all_funcs_json |> 
+        keep(function(x) pluck(x, 'chinese_name') == input$func_selector) 
+    )
+    output$txt_json_config <-renderPrint({
+      json_config <- get_func_definition()|>
+      toJSON(auto_unbox = T, pretty=T)
+      print(json_config)
+      return(json_config) 
     })
     
-    # button handler for chat clearing
-    observeEvent(input$msg_clearchat, {
-    #  if (debug) message("clearing chat log.")
-      db_clear(con)
-      messages_db <- reactiveValues(messages = read_messages(con))
-    })
+    output$txt_json_feedback <- renderText({ 'this is json feedback' })
     
-    # button handler for sending a message
-    observeEvent(input$msg_button, {
-    # if (debug) message(input$msg_text)
-    # only do anything if there's a message
-      if (!(input$msg_text == "" | is.null(input$msg_text))) {
-        send_message(con, 
-                     sender=input$msg_username, 
-                     content=input$msg_text)
-        # Reactive expression to return selected values
+    observeEvent(input$goButton, {
+      output$ai_output<- renderText({
+        message <-  get_llm_result(prompt=input$prompt,
+                                   #img_url=input$file$datapath,
+                                   model_id=input$model_id,
+                                   llm_type = 'agent',
+                                   funcs_json = get_func_definition())
         
-         for (id in input$model_id) {
-           # llm_answer <- get_llm_result(prompt=input$msg_text,
-           #                              model_id = id)
-           chat_history<-NULL
-           # if (!history$exists('chat_history')){
-           #   chat_history<-NULL
-           # }else{ 
-           #   chat_history <- history$get('chat_history')
-           #   }
-           
-           call_func_result <- llm_func(prompt=input$msg_text, 
-                                    model_id=id,
-                                    history = chat_history) 
-           
-           print("**********************")
-           print(chat_history)
-           llm_answer <- chat_history
-           
-           send_message(con, 
-                        sender=id,
-                        content=llm_answer)
-           
-           messages_db$messages <- read_messages(con)
-           
-         }
-        # clear the message text
-        shiny::updateTextInput(inputId = "msg_text",
-                               value = "")
-      }
-    })
+        
+        if (is.null(message)){
+          message <- 'failed to detect!!!'
+        }else{
+          print(message)
+          ai_message <- 
+            get_ai_result(message,ai_type='agent')  |>
+            toJSON(pretty=T,auto_unbox = T)
+          
+          fancy_vision_message = markdown(ai_message$content)
+        }
+        print("**************************")
+        print(paste0(' output is :',fancy_vision_message))
+        
+        return(fancy_vision_message)
+      })
+    }) 
     
     # render the chat data using a custom function
-    output$messages_fancy <- shiny::renderUI({
-      render_msg_fancy(messages_db$messages,
-                       input$msg_username)
-    })
+    
   })}
