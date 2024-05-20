@@ -382,3 +382,7 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       )
   return(ai_result)
 }
+
+get_calc_result <- function(call_name, parameter_1, parameter_2){
+
+}
