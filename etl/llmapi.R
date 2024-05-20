@@ -155,10 +155,19 @@ get_json_agent <- function(user_input, select_model,funcs_json){
   
   #func_json
   # TODO: there should be some code to validate the json of function 
+  # for function_call, the google gemini api is not full compatible with chatgpt.
+  # so I need remove the extra field chinese_name
+  if(grepl('gemini', select_model)){
+    adj_funcs_json <-  funcs_json|>
+      purrr::map(\(x) { x[['chinese_name']]=NULL; return(x)} )
+  }else{
+    adj_funcs_json <-  funcs_json
+    
+  }
   
   json_data <- list(model=select_model,
                     messages = json_contents,
-                    functions= funcs_json,
+                    functions= adj_funcs_json,
                     function_call='auto'
                     )
   return(json_data)
@@ -289,10 +298,10 @@ check_llm_connection<- function() {
 }
 
 #' @export
-llm_chat <- function( prompt, model_id='llama', history=NULL){
+llm_chat <- function( user_input, model_id='llama', history=NULL){
   
   # select_model is a fake model_info, it will be actual assigned in get_llm_result function.
-  chat_history <- get_json_chat_data(prompt = prompt, 
+  chat_history <- get_json_chat_data(prompt = user_input, 
                                      select_model ='llama', 
                                      history = history)
   
@@ -363,12 +372,13 @@ llm_func <- function( prompt, model_id='llama', history=NULL){
 get_ai_result <- function(ai_response,ai_type='chat'){
   
   ai_message <- ai_response |> pluck('choices',1,'message')
+  finish_reason <- ai_response |> pluck('choices',1,'finish_reason')
   
-  ai_result <- switch(ai_type,
+  ai_result <- switch(finish_reason,
                       # chat_type
-                      chat = list(role=ai_message$role, content=ai_message$content),
-                      img  = list(role=ai_message$role,content=ai_message$content),
-                      agent = list(role=ai_message$role, content=ai_message$function_call)
+                      stop = list(role=ai_message$role, content=ai_message$content),
+                      function_call = list(role=ai_message$role, content=ai_message$function_call),
+                      list(role=ai_message$role, content=ai_message$content)
                       )
   return(ai_result)
 }

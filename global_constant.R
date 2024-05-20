@@ -11,7 +11,7 @@ box::use(shiny.i18n[Translator])
 
 i18n<- Translator$new(translation_csvs_path = "./translation/")
 i18n$set_translation_language(app_language)
-IS_DEBUG <- FALSE 
+IS_DEBUG <- FALSE
 # app level
 app_name <- i18n$translate('AI_chatbox')
 # time series name

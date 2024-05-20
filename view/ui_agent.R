@@ -6,7 +6,7 @@ box::use(shiny[NS,
                renderImage,
                tags,
                titlePanel,
-               uiOutput,renderPrint,
+               uiOutput,renderPrint,renderText, markdown,
                textInput, textOutput,verbatimTextOutput,
                selectInput,
                textAreaInput,
@@ -61,7 +61,7 @@ ui <- function(id, label='agent_llm'){
        column(width=1),
        column(width=6,
               style = 'border: solid 0.1px grey; min-height: 100px;',  
-              textOutput(inline=TRUE,
+              verbatimTextOutput(
                          #label = 'AI feedback',
                          outputId = ns('ai_output')#,value = 'AI feedback'
               )
@@ -116,24 +116,40 @@ ui <- function(id, label='agent_llm'){
 
 #' @export
 server <- function(id) {
-  moduleServer(id, function(input, output, session,chat_history=NULL) {
+  moduleServer(id, function(input, output, session) {
     
     # based on the selectInput to the function definiton
-    get_func_definition <- reactive(
+    # 
+    # get_func_definition <- reactive({
+    #   all_funcs_json |> 
+    #     keep(function(x) pluck(x, 'chinese_name') == input$func_selector) 
+    # })
+    # 
+    # output$txt_json_config <- renderPrint({
+    #   
+    #   json_config <- 
+    #     get_func_definition()|>
+    #     toJSON(auto_unbox = T, pretty=T)
+    #   
+    #   print(json_config)
+    #   return(json_config) 
+    # })
+    # 
+    get_func_definition <- reactive({
+      #print(input$func_selector)
       all_funcs_json |> 
-        keep(function(x) pluck(x, 'chinese_name') == input$func_selector) 
-    )
-    output$txt_json_config <-renderPrint({
-      json_config <- get_func_definition()|>
-      toJSON(auto_unbox = T, pretty=T)
-      print(json_config)
-      return(json_config) 
+        keep(function(x) pluck(x, 'chinese_name') == input$func_selector)
+     
     })
-    
+    output$txt_json_config <-renderPrint({
+      get_func_definition() |>
+        toJSON(auto_unbox = T, pretty=T)
+    })
     output$txt_json_feedback <- renderText({ 'this is json feedback' })
     
     observeEvent(input$goButton, {
-      output$ai_output<- renderText({
+      output$ai_output<- renderPrint({
+        
         message <-  get_llm_result(prompt=input$prompt,
                                    #img_url=input$file$datapath,
                                    model_id=input$model_id,
@@ -144,17 +160,15 @@ server <- function(id) {
         if (is.null(message)){
           message <- 'failed to detect!!!'
         }else{
-          print(message)
+         # print(message)
           ai_message <- 
             get_ai_result(message,ai_type='agent')  |>
-            toJSON(pretty=T,auto_unbox = T)
-          
-          fancy_vision_message = markdown(ai_message$content)
+            pluck('content')#|>
+            #toJSON(pretty=T,auto_unbox = T)
+     
         }
-        print("**************************")
-        print(paste0(' output is :',fancy_vision_message))
-        
-        return(fancy_vision_message)
+     
+        return(ai_message)
       })
     }) 
     

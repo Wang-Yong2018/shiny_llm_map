@@ -38,6 +38,9 @@ server <- function(input, output) {
   ui_echo$server('chat_echo')
   ui_chat$server('chat_llm')
   ui_vision$server('vision_llm')
+  ui_agent$server('agent_llm')
+  # note: it must add each of module server code here .
+  
   output$mainPanelContent <- renderUI({
      switch(input$sidebar,
             'chat_echo'=ui_echo$ui('chat_echo'),
