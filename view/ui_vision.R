@@ -19,7 +19,7 @@ box::use(purrrlyr[by_row],
          purrr[pluck])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(stats[runif])
-box::use(../global_constant[app_name,model_id_list,img_vision_prompt])
+box::use(../global_constant)
 box::use(../etl/llmapi[ get_llm_result, check_llm_connection,get_ai_result])
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])

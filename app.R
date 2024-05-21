@@ -5,8 +5,13 @@ box::use(shinydashboard[dashboardPage,dashboardHeader,
 
 
 box::use(shiny[NS,icon,shinyApp,h1])
-box::use(./global_constant[app_name])
+box::use(./global_constant[app_name,log_level])
 
+box::use(logger[log_info, log_warn, 
+                log_debug, log_error,
+                log_threshold,
+                INFO, DEBUG, WARN,ERROR,OFF])
+log_threshold(log_level)
 box::use(
    ./view/ui_sidebar,
    ./view/ui_echo,

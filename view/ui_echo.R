@@ -18,7 +18,7 @@ box::use(../etl/chat_api[db_connect,
                          read_messages, send_message,db_clear])
 box::use(purrrlyr[by_row],
          purrr[pluck])
-box::use(../global_constant[app_name])
+box::use(../global_constant)
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(stats[runif])
 

@@ -1,5 +1,10 @@
 # language config
-box::use(../global_constant[app_name,app_language])
+box::use(logger[log_info, log_warn, 
+                log_debug, log_error,
+                log_threshold,
+                INFO, DEBUG, WARN,ERROR,OFF])
+
+box::use(../global_constant[app_name,app_language,vision_model_list,log_level])
 box::use(shiny.i18n[Translator])
 i18n<- Translator$new(translation_csvs_path = "./translation/")
 i18n$set_translation_language(app_language)

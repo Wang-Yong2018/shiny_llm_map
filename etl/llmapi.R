@@ -12,7 +12,13 @@ box::use(dplyr[as_tibble])
 box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
 box::use(../etl/db_api[get_database_info])
-box::use(../global_constant[IS_DEBUG])
+box::use(../global_constant)
+box::use(logger[log_info, log_warn, 
+                log_debug, log_error,
+                log_threshold,
+                INFO, DEBUG, WARN,ERROR,OFF])
+
+log_threshold(log_level)
 # library(purrr)
 # library(memoise)
 cache_dir <- cache_disk("./cache",max_age = 3600*24)
@@ -250,11 +256,9 @@ get_llm_result <- function(prompt='你好，你是谁',
       #pluck('choices')  
     
   }
-  if (is_debug==TRUE){
-    print(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
-    print(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
+  log_debug(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
+  log_debug(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
     
-  }
   
   return(response_message)
 }
@@ -381,8 +385,4 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       list(role=ai_message$role, content=ai_message$content)
                       )
   return(ai_result)
-}
-
-get_calc_result <- function(call_name, parameter_1, parameter_2){
-
 }

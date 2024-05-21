@@ -23,7 +23,7 @@ box::use(../etl/llmapi[ get_llm_result, check_llm_connection,
                         get_chat_history,])
 box::use(purrrlyr[by_row],
          purrr[pluck])
-box::use(../global_constant[app_name,model_id_list])
+box::use(../global_constant)
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(cachem[cache_mem])
 history <- cache_mem()

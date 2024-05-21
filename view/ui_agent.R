@@ -23,7 +23,7 @@ box::use(../etl/llmapi[ get_llm_result,
                         get_ai_result])
 box::use(purrrlyr[by_row],
          purrr[pluck,map_chr, keep])
-box::use(../global_constant[app_name,model_id_list,app_language])
+box::use(../global_constant[app_name,app_language,vision_model_list,debug_level])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(cachem[cache_mem])
 box::use(jsonlite[read_json, toJSON,fromJSON])
@@ -147,27 +147,31 @@ server <- function(id) {
     })
     output$txt_json_feedback <- renderText({ 'this is json feedback' })
     
-    observeEvent(input$goButton, {
-      output$ai_output<- renderPrint({
+    get_reactive_ai_answer <- reactive({
         
         message <-  get_llm_result(prompt=input$prompt,
                                    #img_url=input$file$datapath,
                                    model_id=input$model_id,
                                    llm_type = 'agent',
                                    funcs_json = get_func_definition())
-        
-        
         if (is.null(message)){
           message <- 'failed to detect!!!'
         }else{
          # print(message)
-          ai_message <- 
-            get_ai_result(message,ai_type='agent')  |>
-            pluck('content')#|>
+          message <- 
+            get_ai_result(message,ai_type='agent') 
             #toJSON(pretty=T,auto_unbox = T)
      
         }
-     
+       return(message) 
+      
+    })
+    
+    observeEvent(input$goButton, {
+      output$ai_output<- renderPrint({
+        
+        ai_message <- get_reactive_ai_answer() |> pluck('content')
+        
         return(ai_message)
       })
     }) 

@@ -14,7 +14,7 @@ box::use(shiny[NS,
                reactiveValues, observe, observeEvent,reactive,
                fileInput,imageOutput,
 ])
-box::use(listviewr[jsonedit,jsoneditOutput])
+box::use(listviewer[jsonedit,jsoneditOutput])
 box::use(purrrlyr[by_row],
          purrr[pluck])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
