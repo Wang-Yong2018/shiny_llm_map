@@ -1,14 +1,15 @@
 box::use(purrr[map, pluck])
-box::use(../global_constant)
+box::use(../global_constant[app_name,app_language, 
+                           img_vision_prompt, 
+                           model_id_list,vision_model_list ])
 
 box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
 
-log_threshold(log_level)
 box::use(./agent_math[call_math])
 
 
-agent_router<-function(ai_result){
+get_agent_result<-function(ai_result){
  # ai result is value from get_ai_result(llm_result, ai_type='agent') 
   result = NULL 
 

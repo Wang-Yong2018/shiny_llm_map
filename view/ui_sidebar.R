@@ -4,7 +4,9 @@ box::use(logger[log_info, log_warn,
                 log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
 
-box::use(../global_constant[app_name,app_language,vision_model_list,log_level])
+box::use(../global_constant[app_name,app_language, 
+                           img_vision_prompt, 
+                           model_id_list,vision_model_list ])
 box::use(shiny.i18n[Translator])
 i18n<- Translator$new(translation_csvs_path = "./translation/")
 i18n$set_translation_language(app_language)

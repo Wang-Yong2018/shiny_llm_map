@@ -1,13 +1,10 @@
 box::use(purrr[map])
 box::use(jsonlite[fromJSON, toJSON])
-box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
+box::use(logger[log_info, log_warn,  log_debug, log_error, 
                 INFO, DEBUG, WARN,ERROR,OFF])
-box::use(../global_constant)
-
-
-
-# log_threshold(log_level)
-
+box::use(../global_constant[app_name,app_language, 
+                           img_vision_prompt, 
+                           model_id_list,vision_model_list ])
 
 call_math <- function(func_name, num1, num2) {
   
@@ -29,7 +26,7 @@ call_math <- function(func_name, num1, num2) {
   if (is.null(result)){
     result <-  "This math operation has not support!"
   }
-  formula <- paste0("The format is: ",func_name,'(', num1,',', num2,')')
+  formula <- paste0("The formula is: ",func_name,'(', num1,',', num2,')')
   result<- paste0('The result is :',result)
   text_result <- paste(formula, result, sep = '\n')
   log_debug(paste0('call_math :',text_result) )

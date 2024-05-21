@@ -19,7 +19,10 @@ box::use(purrrlyr[by_row],
          purrr[pluck])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(stats[runif])
-box::use(../global_constant[app_name,model_id_list,img_vision_prompt])
+box::use(../global_constant[app_name,app_language, 
+                           img_vision_prompt, 
+                           model_id_list,vision_model_list ])
+
 box::use(../etl/llmapi[ get_llm_result, check_llm_connection,get_ai_result])
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])
@@ -27,7 +30,6 @@ box::use(../etl/chat_api[db_connect,
 box::use(../etl/img_tools[resize_image])
 
 # language config
-box::use(../global_constant[app_name,app_language,vision_model_list])
 box::use(shiny.i18n[Translator])
 i18n<- Translator$new(translation_csvs_path = "./translation/")
 i18n$set_translation_language(app_language)

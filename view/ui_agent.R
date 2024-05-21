@@ -23,7 +23,9 @@ box::use(../etl/llmapi[ get_llm_result,
                         get_ai_result])
 box::use(purrrlyr[by_row],
          purrr[pluck,map_chr, keep])
-box::use(../global_constant[app_name,app_language,vision_model_list,debug_level])
+box::use(../global_constant[app_name,app_language, 
+                           img_vision_prompt, 
+                           model_id_list,vision_model_list ])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(cachem[cache_mem])
 box::use(jsonlite[read_json, toJSON,fromJSON])

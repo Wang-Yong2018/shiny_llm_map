@@ -5,20 +5,21 @@ box::use(shinydashboard[dashboardPage,dashboardHeader,
 
 
 box::use(shiny[NS,icon,shinyApp,h1])
-box::use(./global_constant[app_name,log_level])
+box::use(./global_constant[app_name,app_language, 
+                           img_vision_prompt, 
+                           model_id_list,vision_model_list ])
 
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
                 log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
-log_threshold(log_level)
 box::use(
    ./view/ui_sidebar,
    ./view/ui_echo,
    ./view/ui_chat,
    ./view/ui_vision,
    ./view/ui_agent,
-   ./view/ui_sql
+   # ./view/ui_sql
 #   ./view/ui_glimpse,
 #   ./view/ui_plot_xy,
 #   ./view/ui_intro,

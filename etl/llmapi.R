@@ -12,15 +12,14 @@ box::use(dplyr[as_tibble])
 box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
 box::use(../etl/db_api[get_database_info])
-box::use(../global_constant)
+box::use(../global_constant[app_name,app_language, 
+                           img_vision_prompt, 
+                           model_id_list,vision_model_list ])
+
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
-                log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
 
-log_threshold(log_level)
-# library(purrr)
-# library(memoise)
 cache_dir <- cache_disk("./cache",max_age = 3600*24)
 
 # build llm connection
@@ -229,8 +228,7 @@ get_llm_result <- function(prompt='你好，你是谁',
                            model_id='llama',
                            llm_type='chat',
                            history=NULL,
-                           funcs_json=NULL,
-                           is_debug=IS_DEBUG){
+                           funcs_json=NULL){
   
 
   post_body <- get_llm_post_data(prompt=prompt,history=history, 
@@ -239,8 +237,8 @@ get_llm_result <- function(prompt='你好，你是谁',
   request <- 
     set_llm_conn() |>
     req_body_json(data=post_body,
-                  type = "application/json") |>
-    req_error(is_error = \(resp) FALSE) 
+                  type = "application/json") #|>
+    #req_error(is_error = \(resp) FALSE) 
   
   # get response while handling the exception 
   response <- try(  
@@ -256,8 +254,8 @@ get_llm_result <- function(prompt='你好，你是谁',
       #pluck('choices')  
     
   }
-  log_debug(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
-  log_debug(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
+  #log_debug(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
+  #log_debug(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
     
   
   return(response_message)
@@ -305,7 +303,7 @@ check_llm_connection<- function() {
 llm_chat <- function( user_input, model_id='llama', history=NULL){
   
   # select_model is a fake model_info, it will be actual assigned in get_llm_result function.
-  chat_history <- get_json_chat_data(prompt = user_input, 
+  chat_history <- get_json_chat_data(user_input = user_input, 
                                      select_model ='llama', 
                                      history = history)
   
