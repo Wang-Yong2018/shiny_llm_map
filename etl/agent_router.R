@@ -9,8 +9,14 @@ box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
 box::use(./agent_math[call_math])
 
 
+get_tools <- function(){
+  tools_source <- './data/tools_config.json'
+  tools <- fromJSON(tools_source,simplifyVector = F)
+}
+
 get_agent_result<-function(ai_result){
  # ai result is value from get_ai_result(llm_result, ai_type='agent') 
+  log_debug(ai_result)
   result = NULL 
 
   tryCatch(
@@ -22,17 +28,17 @@ get_agent_result<-function(ai_result){
       agent_arguments <- 
         ai_result |> 
         pluck('content','arguments') 
-      #log_info('agent name :' ,agent_name)
-      #log_info('agent_arguments :', agent_arguments)
+      log_debug('agent name :' ,agent_name)
+      log_debug('agent_arguments :', agent_arguments)
                 
       agent_arguments <- 
         agent_arguments|>
         fromJSON(simplifyVector = F)
       
       result <-switch(agent_name,
-                      extract_calculation_input=call_math(agent_arguments[1], 
-                                                          agent_arguments[2],
-                                                          agent_arguments[3])
+                      extract_calculation_input=call_math(agent_arguments[[1]], 
+                                                          agent_arguments[[2]],
+                                                          agent_arguments[[3]])
                       )
       if (is.null(result)){
         result <- paste0('the agent (',agent_name,') has not defined')

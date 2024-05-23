@@ -14,7 +14,8 @@ box::use(shiny[NS,
                hr,
                reactiveValues, observe, observeEvent,reactive
                ])
-
+box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
+                INFO, DEBUG, WARN,ERROR,OFF])
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])
 box::use(../etl/llmapi[ get_llm_result,
@@ -35,6 +36,9 @@ i18n<- Translator$new(translation_csvs_path = "./translation/")
 i18n$set_translation_language(app_language)
 
 box::use(stats[runif])
+box::use(../etl/agent_router[get_agent_result])
+
+
 all_funcs_json <- read_json('./data/tools_config.json',simplifyVector = F)
 func_chinese_name <-   all_funcs_json|> map_chr(pluck('chinese_name'))
 
@@ -147,7 +151,6 @@ server <- function(id) {
       get_func_definition() |>
         toJSON(auto_unbox = T, pretty=T)
     })
-    output$txt_json_feedback <- renderText({ 'this is json feedback' })
     
     get_reactive_ai_answer <- reactive({
         
@@ -178,6 +181,14 @@ server <- function(id) {
       })
     }) 
     
+    output$txt_json_feedback <- renderText({
+      func_result <- 
+        get_reactive_ai_answer() |>
+        get_agent_result()
+      log_debug(func_result)
+      return(func_result)
+      
+    })
     # render the chat data using a custom function
     
   })}
