@@ -143,52 +143,46 @@ server <- function(id) {
     # 
     get_func_definition <- reactive({
       #print(input$func_selector)
-      all_funcs_json |> 
+      result <- all_funcs_json |> 
         keep(function(x) pluck(x, 'chinese_name') == input$func_selector)
-     
     })
+    
     output$txt_json_config <-renderPrint({
+      
       get_func_definition() |>
         toJSON(auto_unbox = T, pretty=T)
     })
-    
-    get_reactive_ai_answer <- reactive({
-        
-        message <-  get_llm_result(prompt=input$prompt,
-                                   #img_url=input$file$datapath,
-                                   model_id=input$model_id,
-                                   llm_type = 'agent',
-                                   funcs_json = get_func_definition())
-        if (is.null(message)){
-          message <- 'failed to detect!!!'
-        }else{
-         # print(message)
-          message <- 
-            get_ai_result(message,ai_type='agent') 
-            #toJSON(pretty=T,auto_unbox = T)
-     
-        }
-       return(message) 
-      
-    })
-    
     observeEvent(input$goButton, {
+      
+      #ai_message <- get_reactive_ai_answer()
+      func_json <- get_func_definition()
+      ai_message <-  
+        get_llm_result(prompt=input$prompt,
+                       #img_url=input$file$datapath,
+                       model_id=input$model_id,
+                       llm_type = 'agent',
+                       funcs_json = func_json)|>
+        get_ai_result(ai_type='agent') 
+      
       output$ai_output<- renderPrint({
+        ai_message|> pluck('content')
         
-        ai_message <- get_reactive_ai_answer() |> pluck('content')
+      })
+      
+      
+      output$txt_json_feedback <- renderPrint({
+        func_result <- 'no support! only chatgpt interface compatible'
+        if (grepl('gpt',input$model_id)){
+          func_result <-  get_agent_result(ai_message)
+          log_debug(paste0('the output of func_result is ===>', func_result))
+        }
         
-        return(ai_message)
+        return(func_result)
+        
       })
     }) 
     
-    output$txt_json_feedback <- renderText({
-      func_result <- 
-        get_reactive_ai_answer() |>
-        get_agent_result()
-      log_debug(func_result)
-      return(func_result)
-      
-    })
+
     # render the chat data using a custom function
     
   })}

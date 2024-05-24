@@ -55,8 +55,8 @@ get_select_model_name <- function(model_id) {
                        gpt4t = "openai/gpt-4-turbo",
                        gpt4v = "openai/gpt-4-vision-preview",
                        gemini = "google/gemini-pro-1.5",
-                       llama = 'meta-llama/llama-3-8b-instruct:extended',
-                       "google/gemini-pro-1.5" )
+                       llama = 'meta-llama/llama-3-8b-instruct:free',
+                       "openai/gpt-3.5-turbo" )
   return(select_model)
 }
 
@@ -162,45 +162,26 @@ get_json_agent <- function(user_input, select_model,funcs_json){
   # TODO: there should be some code to validate the json of function 
   # for function_call, the google gemini api is not full compatible with chatgpt.
   # so I need remove the extra field chinese_name
-  if(grepl('gemini', select_model)){
-    adj_funcs_json <-  funcs_json|>
-      purrr::map(\(x) { x[['chinese_name']]=NULL; return(x)} )
-  }else{
-    adj_funcs_json <-  funcs_json
+  funcs_json
+    
+  if(grepl('gemini',select_model)){
+    gemini_func_json <- list(function_declarations=funcs_json)
+    json_data <- list(model=select_model,
+                      messages = json_contents,
+                      functions = gemini_func_json,
+                      tool_config=list(function_calling_config='AUTO'))
+    
+  } else {
+    json_data <- list(model=select_model,
+                      messages = json_contents,
+                      functions= funcs_json,
+                      function_call='auto' )
     
   }
-  
-  json_data <- list(model=select_model,
-                    messages = json_contents,
-                    functions= adj_funcs_json,
-                    function_call='auto'
-                    )
   return(json_data)
 }
 
 
-# get_json_call_data <- function(user_input, img_url, select_model,image_type='call'){
-#   
-#   # prepare the configure
-#   json_generationConfig = list( temperature = 0.5,
-#                                 maxOutputTokens = 1024)
-#   # prepare the data
-#   json_contents <- list(list(role = 'user',
-#                              content=list(list(type='text', text=user_input),
-#                                           list(type='image_url', 
-#                                                image_url=list(url=image_content,
-#                                                               detail='auto'))
-#                              ))
-#   )
-#   #TO MAX_TOKEN was used to limit the chat ai words. IF it is image, it will be exceed.
-#   json_max_tokens = 300                                             
-#   json_data <- list(model=select_model,
-#                     messages = json_contents,
-#                     max_tokens = json_max_tokens
-#                     #generationConfig = json_generationConfig
-#   )
-#   return(json_data)
-# }
 
 #' @export
 get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_id='llama', img_url=NULL,funcs_json=NULL){
@@ -250,32 +231,12 @@ get_llm_result <- function(prompt='你好，你是谁',
   } else {
     response_message <- 
       response |> 
-      resp_body_json() #|>
-      #pluck('choices')  
-    
+      resp_body_json() 
   }
-  #log_debug(post_body|>toJSON(auto_unbox=TRUE,pretty=TRUE))
-  #log_debug(response_message|>toJSON(auto_unbox=TRUE,pretty=TRUE))
-    
   
   return(response_message)
 }
 
-#' 
-#' #' @export 
-#' fast_get_llm_result <- memoise(get_llm_result,cache=cache_dir)
-#' 
-#' # list the large lanugage model services list info as data frame
-#' # two version , list, fast list
-#' list_llm_service <- function(){
-#'   df_llm_service <- set_llm_conn() |>
-#'     req_perform_quick() |>
-#'     resp_body_json()|>
-#'     purrr::pluck('models') |>
-#'     purrr::map_dfr(\(x) as_tibble(x))
-#'   
-#'   return(df_llm_service)
-#' }
 
 # Function to check connection with google
 
@@ -382,5 +343,6 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       function_call = list(role=ai_message$role, content=ai_message$function_call),
                       list(role=ai_message$role, content=ai_message$content)
                       )
+  log_debug(paste0('the ai message result is ====>', ai_result))
   return(ai_result)
 }

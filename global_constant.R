@@ -2,9 +2,9 @@
 
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
-                log_threshold,
+                log_threshold,log_formatter,formatter_pander,
                 INFO, DEBUG, WARN,ERROR,OFF])
-
+log_formatter(formatter_pander)
 log_threshold(DEBUG,namespace = "global")
 
 # language settting

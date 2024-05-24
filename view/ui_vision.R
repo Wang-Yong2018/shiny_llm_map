@@ -14,7 +14,7 @@ box::use(shiny[NS,
                reactiveValues, observe, observeEvent,reactive,
                fileInput,imageOutput,
 ])
-
+box::use(logger[log_info, log_debug, log_error])
 box::use(purrrlyr[by_row],
          purrr[pluck])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
@@ -30,6 +30,7 @@ box::use(../global_constant[app_name,app_language,
                            img_vision_prompt, 
                            model_id_list,vision_model_list ])
 box::use(shiny.i18n[Translator])
+
 i18n<- Translator$new(translation_csvs_path = "./translation/")
 i18n$set_translation_language(app_language)
 

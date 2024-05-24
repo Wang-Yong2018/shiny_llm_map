@@ -1,4 +1,30 @@
 [
+       {
+        "name": "extract_calculation_input",
+        "chinese_name": "提取计算公式",
+        "description": "extract the mathmatical functions and two numberic numbers ",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "function": {
+                    "type": "string",
+                    "description": "The name of the mathmatical functions and operation. 1. For mathmatical function, pls use postgresql  mathematical Functions name as standard name. here is the example for name, abs, cbrt, div, exp, factorial, log, log10, ln, mod, pi, power,round, sqrt.  2. For mathmatical operation, pls use postgresql mathmatical operation description as name, such as Addition, Subtraction, Multiplication, Division, Modulo, Exponentiation, Square root, Cube root. 3. if both mathmatical function and operation has name, use postgresql mathmatical function name."  },
+                "first_numeric": {
+                    "type": "string",
+                    "description": "the first presented numeric number"
+                },
+                "second_numeric": {
+                    "type": "string",
+                    "description": "the second presented numeric number"
+                }
+            },
+            "required": [
+                "function",
+                "first_numeric",
+                "second_numeric"
+            ]
+        }
+    }, 
     {
         "name": "extract_student_info",
         "chinese_name": "提取学生信息",
@@ -33,33 +59,6 @@
                 "school",
                 "grades",
                 "club"
-            ]
-        }
-    },
-    {
-        "name": "extract_calculation_input",
-        "chinese_name": "提取计算公式",
-        "description": "extract the mathmatical functions and two numberic numbers ",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "function": {
-                    "type": "string",
-                    "description": "Name of the mathmatical functions, Example: addition, subtraction, Multiplication, Division, remainder,  Exponentiation, Square root, Cube root"
-                },
-                "first_numeric": {
-                    "type": "string",
-                    "description": "the first presented numeric number"
-                },
-                "second_numeric": {
-                    "type": "string",
-                    "description": "the second presented numeric number"
-                }
-            },
-            "required": [
-                "function",
-                "first_numeric",
-                "second_numeric"
             ]
         }
     }
