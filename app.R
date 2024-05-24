@@ -19,7 +19,7 @@ box::use(
    ./view/ui_chat,
    ./view/ui_vision,
    ./view/ui_agent,
-   # ./view/ui_sql
+   ./view/ui_sql
 #   ./view/ui_glimpse,
 #   ./view/ui_plot_xy,
 #   ./view/ui_intro,
@@ -45,6 +45,7 @@ server <- function(input, output) {
   ui_chat$server('chat_llm')
   ui_vision$server('vision_llm')
   ui_agent$server('agent_llm')
+  ui_sql$server('sql_llm')
   # note: it must add each of module server code here .
   
   output$mainPanelContent <- renderUI({
@@ -54,7 +55,7 @@ server <- function(input, output) {
             "vision_llm"= ui_vision$ui('vision_llm'),#h2('image Under construction') ,
             # "chat_openai"= h2('openai Under construction') ,
             "agent_llm"= ui_agent$ui('agent_llm') ,
-            "sql_llm"=  h2('debate Under construction') ,
+            "sql_llm"=  ui_sql$ui('sql_llm') ,
             "chat_debate"= h2('debate Under construction') ,
             "chat_rag"= h2('rag Under construction') ,
             "chat_voice"= h2('voice Under construction') ,
