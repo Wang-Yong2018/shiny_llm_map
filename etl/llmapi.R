@@ -11,7 +11,7 @@ box::use(cachem[cache_disk,cache_mem],
 box::use(dplyr[as_tibble])
 box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
-box::use(../etl/db_api[get_db_schema])
+box::use(../etl/agent_sql[get_db_schema])
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
                            model_id_list,vision_model_list ])
@@ -339,9 +339,15 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       # chat_type
                       stop = list(role=ai_message$role, content=ai_message$content),
                       function_call = list(role=ai_message$role, content=ai_message$function_call),
-                      sql_query=list(role=ai_message$role, content=list(name='sql_query',arguments=ai_message$content)),
+                      #sql_query=list(role=ai_message$role, content=list(name='sql_query',arguments=ai_message$content)),
                       list(role=ai_message$role, content=ai_message$content)
                       )
+  if(ai_type =='sql_query'){
+    ai_result <-list(
+      role=ai_message$role,
+      content=list(name='sql_query',arguments=ai_message$content))
+    
+  }
   log_debug(paste0('the ai message result is ====>', ai_result))
   return(ai_result)
 }

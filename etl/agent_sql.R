@@ -1,12 +1,14 @@
-box::use(DBI[dbListTables,dbListFields,
-             dbConnect,dbDisconnect,
-             dbSendQuery, dbFetch])
-box::use(RPostgres[Postgres],
+box::use(DBI[dbListTables,dbListFields, dbConnect,dbDisconnect, dbSendQuery, dbFetch],
+         RPostgres[Postgres],
          RSQLite[SQLite])
+box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
+                INFO, DEBUG, WARN,ERROR,OFF])
+box::use(dplyr[case_when])
 box::use(purrr[map,imap,pluck],
          stats[setNames])
-box::use(jsonlite[fromJSON, toJSON])
-box::use(../global_constant[db_id_list, max_sql_query_rows])
+box::use(jsonlite[fromJSON, toJSON],
+         stringr[str_glue])
+box::use(../global_constant[db_id_list, max_sql_query_rows,sql_agent_config_file])
 
 get_db_conn <- function(db_id){
   db_name <- "./data/chinook.db"
@@ -18,6 +20,40 @@ get_db_conn <- function(db_id){
   #               postgres=dbConnect(RPostgres)
   #                 )
 }
+
+#' @export
+get_dbms_name <-function(db_id){
+  
+  conn <- 
+    get_db_conn(db_id) 
+  
+  connection_class <- conn|>class() |>pluck(1)
+  
+  dbDisconnect(conn)
+  dbms_name <- case_when(
+    grepl('SQLite',connection_class) ~'sqlite',
+    grepl('Postgres',connection_class) ~'postgres',
+    grepl('MySQL',connection_class) ~'mysql',
+    grepl('duckdb',connection_class) ~'duckdb',
+    .default='postgres'
+  )
+  return(dbms_name)
+  
+}
+
+#' @export
+get_sql_prompt <- function(db_id, user_prompt){
+  dbms_name      <- get_dbms_name(db_id)
+  sql_ddl <- get_db_schema_text(input$db_id)
+  sql_sample <-''
+  user_question <- user_prompt
+  
+  system_prompt <- readLines(sql_agent_config_file) |>paste0(collapse = '\n')
+  agent_prompt <- str_glue(system_prompt)
+  
+  return(agent_prompt) 
+}
+
 
 #' @export
 get_db_schema <- function(db_id){
@@ -83,8 +119,7 @@ get_db_schema_text <- function(db_id){
 
 #' @export
 get_sql_result <- function(query=NULL,db_id=NULL){
-
-  tryCatch(
+  result <- tryCatch(
     expr = {
       conn <- get_db_conn(db_id)
       result <- conn |> 
@@ -92,10 +127,10 @@ get_sql_result <- function(query=NULL,db_id=NULL){
         dbFetch(n=max_sql_query_rows)
     },
     error = function(e) {
-      log_error(paste0("An sql agent router parse error occurred: ", conditionMessage(e), "\n"))
+      error_message <- e|>pluck('message')
+      log_error(paste0("An sql agent router parse error occurred: ", error_message))
+      result <- error_message
     }
 )
     return(result) 
-    
-  
 }

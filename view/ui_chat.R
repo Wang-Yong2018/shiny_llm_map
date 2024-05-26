@@ -14,6 +14,10 @@ box::use(shiny[NS,
                hr,
                reactiveValues, observe, observeEvent,reactive
                ])
+box::use(logger[log_info, log_warn, 
+                log_debug, log_error,
+                log_threshold,
+                INFO, DEBUG, WARN,ERROR,OFF])
 
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])
@@ -23,8 +27,14 @@ box::use(../etl/llmapi[ get_llm_result, check_llm_connection,
                         get_chat_history,])
 box::use(purrrlyr[by_row],
          purrr[pluck])
-box::use(../global_constant)
+box::use(../global_constant[app_name,app_language, 
+                            img_vision_prompt, 
+                            model_id_list,vision_model_list,
+                            db_id_list])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
+box::use(shiny.i18n[Translator])
+i18n<- Translator$new(translation_csvs_path = "./translation/")
+i18n$set_translation_language(app_language)
 box::use(cachem[cache_mem])
 history <- cache_mem()
 
@@ -160,10 +170,10 @@ server <- function(id) {
             
            history$set('chat_history',new_history)
            
-           print("**********************")
-           print(chat_history)
-           print(ai_message)
-           print(new_history)
+           log_debug("**********************")
+           log_debug(paste0('the chat history is ===>', chat_history))
+           log_debug(paste0('the ai_message ---->',ai_message))
+           log_debug(paste0('the new history is ----->',new_history))
            llm_answer <- ai_message$content
            
            send_message(con, 

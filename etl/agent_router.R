@@ -8,7 +8,7 @@ box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
 
 box::use(./agent_math[call_math])
-box::use(./db_api[get_sql_result])
+box::use(./agent_sql[get_sql_result])
 
 get_tools <- function(){
   tools_source <- './data/tools_config.json'

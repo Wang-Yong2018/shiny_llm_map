@@ -109,7 +109,7 @@ server <- function(id) {
         message <-  get_llm_result(prompt=input$prompt,
                                    model_id=input$model_id,
                                    llm_type = 'img',
-                                   func_list=func_list)
+                                   funcs_json=func_list)
         
         if (is.null(message)){
           message <- 'failed to detect!!!'

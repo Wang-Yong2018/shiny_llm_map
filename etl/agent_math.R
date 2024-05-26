@@ -14,8 +14,8 @@ call_math <- function(agent_arguments) {
   
   # Switch to calculate the result based on the function name
   func_name <- arguments[1]
-  num1 <- arguments[2]|>as.numeric(num1)
-  num2 <- arguments[3]|>as.numeric(num2)
+  num1 <- arguments[2]|>as.numeric()
+  num2 <- arguments[3]|>as.numeric()
   
   result <- switch(tolower(func_name),
          "addition" = num1 + num2,
