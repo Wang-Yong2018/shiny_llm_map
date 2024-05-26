@@ -77,7 +77,7 @@ ui <- function(id, label='chat_llm'){
                                     label = NULL
              ) )),
       column(width=2,selectInput(ns('model_id'),
-                                 label='',
+                                 label= i18n$translate('model list'),
                                  choices=model_id_list,
                                  multiple=TRUE,
                                  selected=model_id_list[1])),

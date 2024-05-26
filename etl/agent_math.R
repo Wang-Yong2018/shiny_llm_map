@@ -6,11 +6,17 @@ box::use(../global_constant[app_name,app_language,
                            img_vision_prompt,
                            model_id_list,vision_model_list ])
 
-call_math <- function(func_name, num1, num2) {
+call_math <- function(agent_arguments) {
+  
+  arguments <- 
+    agent_arguments|>
+    fromJSON(simplifyVector = F)
   
   # Switch to calculate the result based on the function name
-  num1 <- as.numeric(num1)
-  num2 <- as.numeric(num2)
+  func_name <- arguments[1]
+  num1 <- arguments[2]|>as.numeric(num1)
+  num2 <- arguments[3]|>as.numeric(num2)
+  
   result <- switch(tolower(func_name),
          "addition" = num1 + num2,
          "subtraction" = num1 - num2,

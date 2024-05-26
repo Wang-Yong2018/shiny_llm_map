@@ -11,7 +11,7 @@ box::use(cachem[cache_disk,cache_mem],
 box::use(dplyr[as_tibble])
 box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
-box::use(../etl/db_api[get_database_info])
+box::use(../etl/db_api[get_db_schema])
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
                            model_id_list,vision_model_list ])
@@ -316,8 +316,6 @@ llm_func <- function( prompt, model_id='llama', history=NULL){
       resp_body_json()|> 
       pluck('choices',1) # R list index from 1
       # note: in R language, the index is come from 1 instead of 0. In python, it is from 0
-    
-     
   }
 
   result <- switch(response_message$finish_reason,
@@ -341,6 +339,7 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       # chat_type
                       stop = list(role=ai_message$role, content=ai_message$content),
                       function_call = list(role=ai_message$role, content=ai_message$function_call),
+                      sql_query=list(role=ai_message$role, content=list(name='sql_query',arguments=ai_message$content)),
                       list(role=ai_message$role, content=ai_message$content)
                       )
   log_debug(paste0('the ai message result is ====>', ai_result))

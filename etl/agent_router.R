@@ -8,7 +8,7 @@ box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
 
 box::use(./agent_math[call_math])
-
+box::use(./db_api[get_sql_result])
 
 get_tools <- function(){
   tools_source <- './data/tools_config.json'
@@ -31,16 +31,12 @@ get_agent_result<-function(ai_result){
         pluck('content','arguments') 
       log_debug(paste0('agent name :' ,agent_name))
       log_debug(paste0('agent_arguments :', agent_arguments))
-                
-      agent_arguments <- 
-        agent_arguments|>
-        fromJSON(simplifyVector = F)
-      
+
       result <-switch(agent_name,
-                      extract_calculation_input=call_math(agent_arguments[[1]], 
-                                                          agent_arguments[[2]],
-                                                          agent_arguments[[3]])
+                      extract_calculation_input=call_math(agent_arguments),
+                      sql_query=get_sql_result(agent_arguments)
                       )
+      
       log_debug(paste0( 'The agent result is ==>',result))
       if (is.null(result)){
         result <- paste0('the agent (',agent_name,') has not defined')
