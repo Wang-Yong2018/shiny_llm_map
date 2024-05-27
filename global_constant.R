@@ -28,7 +28,10 @@ app_name <- i18n$translate('AI_chatbox')
 ts_var_name <-'biz_date'
 # ts_var_name <-'rq' 
 model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v')
-db_id_list <-c('chinook')
+
+db_id_list <-c('chinook','cyd')
+
+db_chinook_url <- './data/chinook.db'
 # group key name
 site_var_name <- 'collection_node'
 # site_var_name <- 'site_name'

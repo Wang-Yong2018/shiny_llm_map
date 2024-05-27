@@ -9,6 +9,7 @@ box::use(purrr[map_dfr, pluck])
 box::use(cachem[cache_disk,cache_mem],
          memoise[memoise])
 box::use(dplyr[as_tibble])
+box::use(stringr[str_extract])
 box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
 box::use(../etl/agent_sql[get_db_schema])
@@ -36,11 +37,11 @@ set_llm_conn <- function(
   #prompt_mesage <- 'who are you?'
   #model_type='gemini-pro:generateContent' 
   req <- request(url) |>
-    req_timeout(20)|>
+    req_timeout(10)|>
     req_headers(
       Authorization=paste0('Bearer ',api_key) )|>
     req_retry(  max_tries = 3,
-                backoff = ~2) |>
+                backoff = ~1) |>
     req_user_agent('shiny_ai')
   
   return(req)
@@ -49,14 +50,14 @@ set_llm_conn <- function(
 
 get_select_model_name <- function(model_id) {
   select_model= switch(model_id,
-                       gpt = "openai/gpt-3.5-turbo", 
-                       gpt35 = "openai/gpt-3.5-turbo", 
+                       gpt =   "openai/gpt-3.5-turbo-0125", 
+                       gpt35 = "openai/gpt-3.5-turbo-0125", 
                        gpt4 = "openai/gpt-4",
                        gpt4t = "openai/gpt-4-turbo",
                        gpt4v = "openai/gpt-4-vision-preview",
                        gemini = "google/gemini-pro-1.5",
-                       llama = 'meta-llama/llama-3-8b-instruct:free',
-                       "openai/gpt-3.5-turbo" )
+                       llama = 'meta-llama/llama-3-8b-instruct:free'
+                       )
   return(select_model)
 }
 
@@ -329,6 +330,28 @@ llm_func <- function( prompt, model_id='llama', history=NULL){
 }
 
 
+extract_md_code<- function(text){
+  
+  # Extract the code inside the ``` ```
+  # Remove the backticks from the extracted string
+  
+  code_list <- 
+    text |>
+    str_extract(string=_, pattern = "```?[\\s\\S]*```") |>
+    gsub(pattern = "```", replacement="", x=_) |>
+    strsplit(x=_, split="\n")
+  
+
+  # Remove the first line (language identifier)
+  
+  result <- code_list[[1]][-1] |> 
+    
+    paste0(collapse = '\n')
+  return(result)
+  
+}
+
+
 #' @export
 get_ai_result <- function(ai_response,ai_type='chat'){
   
@@ -342,10 +365,12 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       #sql_query=list(role=ai_message$role, content=list(name='sql_query',arguments=ai_message$content)),
                       list(role=ai_message$role, content=ai_message$content)
                       )
-  if(ai_type =='sql_query'){
+  if(ai_type %in% c('sql_query','dot')){
+    
+    code <- ai_message$content |> extract_md_code()
     ai_result <-list(
       role=ai_message$role,
-      content=list(name='sql_query',arguments=ai_message$content))
+      content=list(name='sql_query',arguments=code))
     
   }
   log_debug(paste0('the ai message result is ====>', ai_result))

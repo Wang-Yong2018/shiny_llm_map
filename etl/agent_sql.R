@@ -1,4 +1,4 @@
-box::use(DBI[dbListTables,dbListFields, dbConnect,dbDisconnect, dbSendQuery, dbFetch],
+box::use(DBI[dbListTables,dbListFields, dbConnect,dbDisconnect, dbSendQuery, dbFetch,dbClearResult],
          RPostgres[Postgres],
          RSQLite[SQLite])
 box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
@@ -8,17 +8,22 @@ box::use(purrr[map,imap,pluck],
          stats[setNames])
 box::use(jsonlite[fromJSON, toJSON],
          stringr[str_glue])
-box::use(../global_constant[db_id_list, max_sql_query_rows,sql_agent_config_file])
+box::use(../global_constant[db_id_list, db_chinook_url,
+                            max_sql_query_rows,sql_agent_config_file
+                            ])
+box::use(../etl/llmapi[get_llm_result, get_ai_result])
 
 get_db_conn <- function(db_id){
-  db_name <- "./data/chinook.db"
-  conn <- dbConnect(SQLite(), db_name)
-              
-  # conn <- switch(db_type,
-  #               sqlite= dbConnect(SQLite(), db_name),
-  #               postgresql=dbConnect(RPostgres),
-  #               postgres=dbConnect(RPostgres)
-  #                 )
+  
+  conn <- switch(db_id,
+                 chinook =dbConnect(SQLite(), db_chinook_url),
+                 cyd = dbConnect(Postgres(),
+                                 dbname = 'research', 
+                                 host = '172.16.16.103', # i.e. 'ec2-54-83-201-96.compute-1.amazonaws.com'
+                                 port = 5432, # or any other port specified by your DBA
+                                 user = 'postgres',
+                                 password = 'postgres'))
+  return(conn)
 }
 
 #' @export
@@ -41,25 +46,12 @@ get_dbms_name <-function(db_id){
   
 }
 
-#' @export
-get_sql_prompt <- function(db_id, user_prompt){
-  dbms_name      <- get_dbms_name(db_id)
-  sql_ddl <- get_db_schema_text(input$db_id)
-  sql_sample <-''
-  user_question <- user_prompt
-  
-  system_prompt <- readLines(sql_agent_config_file) |>paste0(collapse = '\n')
-  agent_prompt <- str_glue(system_prompt)
-  
-  return(agent_prompt) 
-}
-
 
 #' @export
 get_db_schema <- function(db_id){
   
   # Connect to SQLite database
-  conn <- get_db_conn()
+  conn <- get_db_conn(db_id)
   # List the tables
   # """Return a list of dicts containing the table name and columns for each table in the database."""
   tables_list <- dbListTables(conn)
@@ -73,6 +65,21 @@ get_db_schema <- function(db_id){
   db_schema <- table_dict |> toJSON(auto_unbox=TRUE, pretty=TRUE) 
   return( db_schema)
 }
+
+
+#' @export
+get_sql_prompt <- function(db_id, user_prompt){
+  dbms_name      <- get_dbms_name(db_id)
+  sql_ddl <- get_db_schema_text(db_id)
+  sql_sample <-''
+  user_question <- user_prompt
+  
+  system_prompt <- readLines(sql_agent_config_file) |>paste0(collapse = '\n')
+  agent_prompt <- str_glue(system_prompt)
+  
+  return(agent_prompt) 
+}
+
 
 get_schema_sql <- function(db_id){
   
@@ -98,30 +105,67 @@ FROM (
     ORDER BY tbl_name, cid
 )
 GROUP BY tbl_name;"
-  query <- sqlite_query 
+
+  postgres_query <- "select
+                        'CREATE TABLE ' || nspname || '.' || relname || ' (' || chr(10)||
+                         array_to_string(
+                          	array_agg(attname || 
+                          	          ' '     || 
+                          	          atttypid::regtype::text||
+                          	          CASE attnotnull WHEN true THEN ' NOT NULL' ELSE ' NULL' end ||
+                          	          coalesce('  -- COMMENT ' || quote_literal(description), '')|| 
+                          	          ','  || chr(10)
+                          	          ), '  '  
+                          	          )  || chr(10)|| ');' as definition
+                      from 
+                          pg_attribute
+                          join
+                              pg_class on
+                          	pg_class.oid = pg_attribute.attrelid
+                          join
+                              pg_namespace on
+                          	pg_namespace.oid = pg_class.relnamespace
+                          left join
+                              pg_description on
+                          	pg_description.objoid = pg_class.oid
+                          	and pg_description.objsubid = pg_attribute.attnum
+                      where
+                        	nspname not in ('pg_catalog', 'information_schema')
+                        	and relkind in ('r', 'v')
+                      group by
+                      	nspname, relname;"
+  
+  query <- switch(tolower(get_dbms_name(db_id)),
+                  sqlite = sqlite_query ,
+                  postgres = postgres_query,
+                  postgresql = postgres_query )
   return(query)
 }
 
-#' @param db_id 
-#'
 #' @export
 get_db_schema_text <- function(db_id){
   # Connect to SQLite database
-  conn <- get_db_conn()
-  sql <- get_schema_sql()
-  result <- conn |> 
-    dbSendQuery(sql)|>
-    dbFetch() |>
+  conn <- get_db_conn(db_id)
+  sql <- get_schema_sql(db_id)
+  res <- conn |> 
+    dbSendQuery(sql)
+  result <- 
+    dbFetch(res) |>
     pluck(1) |>
     paste0(collapse = '\n\n')
+# Close the database connection
+  dbClearResult(res)
+  dbDisconnect(conn)
+  
   return(result) 
 }
 
 #' @export
 get_sql_result <- function(query=NULL,db_id=NULL){
+  conn <- get_db_conn(db_id)
+  
   result <- tryCatch(
     expr = {
-      conn <- get_db_conn(db_id)
       result <- conn |> 
         dbSendQuery(query)|>
         dbFetch(n=max_sql_query_rows)
@@ -132,5 +176,32 @@ get_sql_result <- function(query=NULL,db_id=NULL){
       result <- error_message
     }
 )
-    return(result) 
+# Close the database connection
+  dbDisconnect(conn)
+  
+  return(result) 
+}
+
+#' @export
+get_gv_string <- function(db_id, model_id){
+ 
+  db_schema_text <- get_db_schema_text(db_id)
+  gv_prompt_template <- 
+  'as an expert of database entity, relation and diagram,\n
+   pls use graph diagram DOT language code to geneate .gv file for later visulization.
+   Input are The sql ddl codes. They are followed for you analyze and generate dot code.\n
+   output rules:
+   1.output dot code should be inside of the  dot code block.
+    ```
+   {db_schema_text}
+   ```'
+  language <- 'dot'
+  gv_prompt <- str_glue(gv_prompt_template) |>toString()
+  
+  llm_result <- get_llm_result(prompt=gv_prompt,llm_type = 'chat', model_id = model_id)
+  ai_result <- get_ai_result(llm_result,ai_type='dot') 
+  result <- ai_result$content
+  log_debug(paste0('gv_string ---->',result))
+  return(result)
+  
 }

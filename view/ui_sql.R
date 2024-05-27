@@ -15,7 +15,8 @@ box::use(shiny[NS,
                fileInput,imageOutput,
 ])
 box::use(knitr[kable],
-         markdown[mark_html])
+         markdown[mark_html],
+         DiagrammeR[grViz, renderGrViz, grVizOutput])
 box::use(logger[log_info, log_debug, log_error])
 box::use(purrrlyr[by_row],
          purrr[pluck])
@@ -27,7 +28,7 @@ box::use(../etl/chat_api[db_connect,
 
 box::use(../etl/img_tools[resize_image])
 box::use(../etl/agent_sql[get_db_schema,get_db_schema_text,get_dbms_name,
-                          get_sql_prompt])
+                          get_sql_prompt,get_gv_string])
 # language config
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
@@ -47,44 +48,46 @@ ui <- function(id, label='sql_llm'){
   
   fluidPage(
     fluidRow(
-      column(width=5,
-             style = 'border: solid 1px black; min-height: 100px;',   
+      column(width=6,
+             style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
              textAreaInput(
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
                value= i18n$translate(''),
                placeholder = i18n$translate('Enter Prompts Here') )
       ),
-      column(width=5,
+      column(width=6,
              #style = 'border: solid 1px black; min-height: 100px;',     
-             style = "height: 200px;width: 400px; overflow-y: scroll; border: 1px solid black; padding: 10px;",
+             style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
              uiOutput(ns('sql_query')) 
       )
     ),
     fluidRow(
-      column(width=5,
+      column(width=3,
              actionButton(ns('goButton'), i18n$translate('ask ai')) ),
-      column(width=5,selectInput(ns('model_id'),
+      column(width=3,selectInput(ns('model_id'),
                                  label= i18n$translate('model list'),
                                  choices=model_id_list,
                                  multiple=FALSE,
-                                 selected='gpt'))
-      
-    ),
-    fluidRow(
-      column(width=5,selectInput(ns('db_id'),
+                                 selected='gpt')),
+      column(width=3,selectInput(ns('db_id'),
                                  label= i18n$translate('database list'),
                                  choices=db_id_list,
                                  multiple=FALSE,
-                                 selected=db_id_list[1])),
-      column(width=5,
+                                 selected=db_id_list[1]))
+      ),
+    fluidRow(
+      column(width=6,
              # style = 'border: solid 1px black; min-height: 300px;',  
-             style = "height: 200px; width: 400px; overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             uiOutput(ns('system_prompt')))
-
+             style = "height: 400px; overflow-y: scroll; border: 1px solid black; padding: 10px;",
+             uiOutput(ns('system_prompt'))),
+      column(width=6,
+             # style = 'border: solid 1px black; min-height: 300px;',  
+             style = "min-height: 400px; overflow-y: scroll; border: 1px solid black; padding: 10px;",
+             grVizOutput(ns('graph_erd'))
       
     ) 
-  )
+  ))
   }
 
 
@@ -110,6 +113,18 @@ server <- function(id) {
       get_reactive_sql_prompt() |>
       gsub(pattern= '\n', replacement = '<br />', x=_)
       
+    })
+    
+    get_reactive_gv <- reactive({
+      gv_string <- get_gv_string(db_id = input$db_id, 
+                    model_id = input$model_id ) 
+      return(gv_string)
+    })
+    
+    output$graph_erd <- renderGrViz({
+      gv_string <- get_reactive_gv()
+     
+      grViz(diagram =gv_string ,width = "100%", height = "100%")
     })
 
     observeEvent(input$goButton, {

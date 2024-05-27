@@ -1,0 +1,53 @@
+digraph DatabaseRelationships {
+graph [label="Database Table Relationships", labelloc=t, fontsize=18, height=600, width=400];
+
+node [shape=box, style=filled, color=lightblue];
+
+# Define Tables
+albums [label="<f0>|albums|<f1>AlbumId INTEGER\nTitle NVARCHAR(160)\nArtistId INTEGER"];
+artists [label="<f0>|artists|<f1>ArtistId INTEGER\nName NVARCHAR(120)"];
+customers [label="<f0>|customers|<f1>CustomerId INTEGER\nFirstName NVARCHAR(40)\nLastName NVARCHAR(20)\nCompany NVARCHAR(80)\nAddress NVARCHAR(70)\nCity NVARCHAR(40)\nState NVARCHAR(40)\nCountry NVARCHAR(40)\nPostalCode NVARCHAR(10)\nPhone NVARCHAR(24)\nFax NVARCHAR(24)\nEmail NVARCHAR(60)\nSupportRepId INTEGER"];
+employees [label="<f0>|employees|<f1>EmployeeId INTEGER\nLastName NVARCHAR(20)\nFirstName NVARCHAR(20)\nTitle NVARCHAR(30)\nReportsTo INTEGER\nBirthDate DATETIME\nHireDate DATETIME\nAddress NVARCHAR(70)\nCity NVARCHAR(40)\nState NVARCHAR(40)\nCountry NVARCHAR(40)\nPostalCode NVARCHAR(10)\nPhone NVARCHAR(24)\nFax NVARCHAR(24)\nEmail NVARCHAR(60)"];
+genres [label="<f0>|genres|<f1>GenreId INTEGER\nName NVARCHAR(120)"];
+invoice_items [label="<f0>|invoice_items|<f1>InvoiceLineId INTEGER\nInvoiceId INTEGER\nTrackId INTEGER\nUnitPrice NUMERIC(10,2)\nQuantity INTEGER"];
+invoices [label="<f0>|invoices|<f1>InvoiceId INTEGER\nCustomerId INTEGER\nInvoiceDate DATETIME\nBillingAddress NVARCHAR(70)\nBillingCity NVARCHAR(40)\nBillingState NVARCHAR(40)\nBillingCountry NVARCHAR(40)\nBillingPostalCode NVARCHAR(10)\nTotal NUMERIC(10,2)"];
+media_types [label="<f0>|media_types|<f1>MediaTypeId INTEGER\nName NVARCHAR(120)"];
+playlist_track [label="<f0>|playlist_track|<f1>PlaylistId INTEGER\nTrackId INTEGER"];
+playlists [label="<f0>|playlists|<f1>PlaylistId INTEGER\nName NVARCHAR(120)"];
+tracks [label="<f0>|tracks|<f1>TrackId INTEGER\nName NVARCHAR(200)\nAlbumId INTEGER\nMediaTypeId INTEGER\nGenreId INTEGER\nComposer NVARCHAR(220)\nMilliseconds INTEGER\nBytes INTEGER\nUnitPrice NUMERIC(10,2)"];
+
+# Define Relationships
+# Albums and Artists
+artists:f0 -> albums:f1 [label="ArtistId"];
+
+# Customers and Employees
+employees:f0 -> customers:f1 [label="SupportRepId"];
+
+# Invoice Items
+invoice_items:f0 -> invoices:f1 [label="InvoiceId"];
+invoice_items:f2 -> tracks:f0 [label="TrackId"];
+
+# Tracks
+albums:f0 -> tracks:f2 [label="AlbumId"];
+genres:f0 -> tracks:f4 [label="GenreId"];
+media_types:f0 -> tracks:f3 [label="MediaTypeId"];
+
+# Playlists
+tracks:f0 -> playlist_track:f1 [label="TrackId"];
+
+# Display Nodes
+node [shape=none, height=0, margin=0, label=""];
+
+begin -> albums:f0 [style=invis]
+albums:f1 -> artists:f0 [style=invis]
+artists:f1 -> customers:f0 [style=invis]
+customers:f1 -> employees:f0 [style=invis]
+employees:f1 -> genres:f0 [style=invis]
+genres:f1 -> invoice_items:f0 [style=invis]
+invoice_items:f1 -> invoices:f0 [style=invis]
+invoices:f1 -> media_types:f0 [style=invis]
+media_types:f1 -> playlist_track:f0 [style=invis]
+playlist_track:f1 -> playlists:f0 [style=invis]
+playlists:f1 -> tracks:f0 [style=invis]
+tracks:f1 -> end [style=invis]
+}
