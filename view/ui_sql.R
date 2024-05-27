@@ -115,16 +115,19 @@ server <- function(id) {
       
     })
     
-    get_reactive_gv <- reactive({
-      gv_string <- get_gv_string(db_id = input$db_id, 
-                    model_id = input$model_id ) 
-      return(gv_string)
-    })
+    # get_reactive_gv <- reactive({
+    #   gv_string <- get_gv_string(db_id = input$db_id, 
+    #                 model_id = input$model_id ) 
+    #   return(gv_string)
+    # })
     
     output$graph_erd <- renderGrViz({
-      gv_string <- get_reactive_gv()
-     
-      grViz(diagram =gv_string ,width = "100%", height = "100%")
+      
+      file_name <- switch(input$db_id,
+                          chinook = './data/chinook.gv',
+                          cyd = './data/cyd.gv')
+    
+      grViz(file_name ,width = "100%", height = "100%")
     })
 
     observeEvent(input$goButton, {

@@ -1,3 +1,4 @@
+```dot
 digraph G {
     node [shape=record];
     
@@ -28,4 +29,4 @@ digraph G {
     node6 -> node7;
     node7 -> node8;
 }
-
+```
