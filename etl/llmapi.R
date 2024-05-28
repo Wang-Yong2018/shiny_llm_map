@@ -216,6 +216,7 @@ get_llm_result <- function(prompt='你好，你是谁',
   post_body <- get_llm_post_data(prompt=prompt,history=history, 
                                  llm_type=llm_type,model_id=model_id, 
                                  img_url=img_url,funcs_json = funcs_json)
+  log_info(post_body)
   request <- 
     set_llm_conn() |>
     req_body_json(data=post_body,
@@ -234,8 +235,8 @@ get_llm_result <- function(prompt='你好，你是谁',
       response |> 
       resp_body_json() 
   }
-  
-  return(response_message)
+  log_info(response_message)
+  return(  response_message)
 }
 
 
@@ -341,12 +342,22 @@ extract_md_code<- function(text){
     gsub(pattern = "```", replacement="", x=_) |>
     strsplit(x=_, split="\n")
   
-
+  min_code_length= 8  # 'select 1 length is 8. it is minimum sql length'
   # Remove the first line (language identifier)
   
-  result <- code_list[[1]][-1] |> 
+  extract_code  <- code_list[[1]][-1] |> 
     
     paste0(collapse = '\n')
+  if(is.null(extract_code)|length(extract_code )<= min_code_length){
+    log_error(paste('extract_md_code error:',sep = '.....'))
+    log_error(paste('extract code ===> ',extract_code,sep = '.....'))
+    log_error(paste('raw_text ===>:',text,sep = '.....'))
+    
+    result <- text
+  } else{
+    result <-extract_code
+  } 
+  
   return(result)
   
 }
@@ -356,6 +367,7 @@ extract_md_code<- function(text){
 get_ai_result <- function(ai_response,ai_type='chat'){
   
   ai_message <- ai_response |> pluck('choices',1,'message')
+  #log_debug(paste0('the get_ai_result function ai_message is======>',ai_message))
   finish_reason <- ai_response |> pluck('choices',1,'finish_reason')
   
   ai_result <- switch(finish_reason,
@@ -365,6 +377,7 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       #sql_query=list(role=ai_message$role, content=list(name='sql_query',arguments=ai_message$content)),
                       list(role=ai_message$role, content=ai_message$content)
                       )
+  log_debug(ai_result)
   if(ai_type %in% c('sql_query','dot')){
     
     code <- ai_message$content |> extract_md_code()

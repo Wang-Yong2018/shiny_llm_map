@@ -161,14 +161,24 @@ get_db_schema_text <- function(db_id){
 }
 
 #' @export
-get_sql_result <- function(query=NULL,db_id=NULL){
+get_sql_result <- function(arguments){
+  db_id=arguments$db_id
+  query=arguments$sql_query
   conn <- get_db_conn(db_id)
   
+  log_debug(paste0('get_sql_query function:===>',sep='    '))
+  log_debug(paste0('db_id is ===> ',db_id, sep='    '))
+  log_debug(paste0('query is ===> ',query, sep='    '))
   result <- tryCatch(
     expr = {
-      result <- conn |> 
-        dbSendQuery(query)|>
-        dbFetch(n=max_sql_query_rows)
+      res <- 
+        conn |> 
+        dbSendQuery(query)
+      result <-
+        dbFetch(res,n=max_sql_query_rows)
+      dbClearResult(res) 
+      
+      return(result)
     },
     error = function(e) {
       error_message <- e|>pluck('message')

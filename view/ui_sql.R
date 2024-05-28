@@ -32,7 +32,7 @@ box::use(../etl/agent_sql[get_db_schema,get_db_schema_text,get_dbms_name,
 # language config
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
-                           model_id_list,vision_model_list,
+                           model_id_list,vision_model_list,sql_model_id_list,
                            db_id_list])
 box::use(../etl/agent_router[get_agent_result])
 
@@ -48,18 +48,16 @@ ui <- function(id, label='sql_llm'){
   
   fluidPage(
     fluidRow(
-      column(width=6,
+      column(width=12,
              style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
              textAreaInput(
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
                value= i18n$translate(''),
-               placeholder = i18n$translate('Enter Prompts Here') )
-      ),
-      column(width=6,
-             #style = 'border: solid 1px black; min-height: 100px;',     
-             style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             uiOutput(ns('sql_query')) 
+               placeholder = i18n$translate('Enter Prompts Here'),
+               width='100%',
+               rows=5,
+               cols=10)
       )
     ),
     fluidRow(
@@ -67,7 +65,7 @@ ui <- function(id, label='sql_llm'){
              actionButton(ns('goButton'), i18n$translate('ask ai')) ),
       column(width=3,selectInput(ns('model_id'),
                                  label= i18n$translate('model list'),
-                                 choices=model_id_list,
+                                 choices=sql_model_id_list,
                                  multiple=FALSE,
                                  selected='gpt')),
       column(width=3,selectInput(ns('db_id'),
@@ -76,6 +74,13 @@ ui <- function(id, label='sql_llm'){
                                  multiple=FALSE,
                                  selected=db_id_list[1]))
       ),
+    fluidRow(
+      column(width=12,
+             #style = 'border: solid 1px black; min-height: 100px;',     
+             style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
+             uiOutput(ns('sql_query')) 
+      )
+    ),
     fluidRow(
       column(width=6,
              # style = 'border: solid 1px black; min-height: 300px;',  
@@ -143,13 +148,21 @@ server <- function(id) {
         }else{
           print(message)
           ai_message <- get_ai_result(message,ai_type='sql_query')   
-          log_debug('ai_result===', ai_message)
+          
+      
+          ai_sql_message <- list(role=ai_message$role,
+                                 content=list(name = ai_message|>pluck('content','name'),
+                                              arguments= list(db_id =input$db_id,
+                                                              sql_query=ai_message|>pluck('content','arguments')
+                                                              ))
+                                 )
+          log_debug(paste0('ai_sql_result===', ai_sql_message,sep='\n'))
           sql_result <- 
-            get_agent_result(ai_message) |>
+            get_agent_result(ai_sql_message) |>
             kable()|>
             mark_html()
         }
-        log_debug(paste0(' output is :',sql_result))
+        #log_debug(paste0(' output is :',sql_result))
         
         return(sql_result)
       })

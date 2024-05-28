@@ -2,11 +2,15 @@
 
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
-                log_threshold,log_formatter,formatter_pander,
+                log_threshold,log_formatter,formatter_pander,formatter_json,
+                log_layout,layout_json_parser,
+                log_appender, appender_file,
                 INFO, DEBUG, WARN,ERROR,OFF])
-log_formatter(formatter_pander)
-log_threshold(DEBUG,namespace = "global")
-
+log_formatter(formatter_json)
+log_layout(layout_json_parser())
+log_threshold(INFO,namespace = "global")
+log_file <- './llm_message.log'
+log_appender(appender_file(log_file,max_line=1000,max_files = 3L))
 # language settting
 #Sys.setlocale("LC_ALL", 'Chinese (Simplified)_China.utf8')
 
@@ -28,6 +32,7 @@ app_name <- i18n$translate('AI_chatbox')
 ts_var_name <-'biz_date'
 # ts_var_name <-'rq' 
 model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v')
+sql_model_id_list <- c('gemini', 'gpt35','gpt4t')
 
 db_id_list <-c('chinook','cyd')
 
