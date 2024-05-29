@@ -17,7 +17,7 @@ get_tools <- function(){
 
 get_agent_result<-function(ai_result){
  # ai result is value from get_ai_result(llm_result, ai_type='agent') 
-  log_debug(paste0('get agent_result input is ==>',class(ai_result), ai_result))
+  log_info(paste0('get agent_result input is ==>',class(ai_result), ai_result))
   result = NULL 
 
   tryCatch(

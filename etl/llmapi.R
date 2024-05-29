@@ -372,7 +372,7 @@ extract_md_code<- function(text){
 get_ai_result <- function(ai_response,ai_type='chat'){
   
   ai_message <- ai_response |> pluck('choices',1,'message')
-  #log_debug(paste0('the get_ai_result function ai_message is======>',ai_message))
+  log_info(paste0('the get_ai_result function ai_message is======>',ai_message))
   finish_reason <- ai_response |> pluck('choices',1,'finish_reason')
   
   ai_result <- switch(finish_reason,
@@ -383,14 +383,14 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       list(role=ai_message$role, content=ai_message$content)
                       )
   log_debug(ai_result)
-  # if(ai_type %in% c('sql_query','dot')){
-  #   
-  #   code <- ai_message$content |> extract_md_code()
-  #   ai_result <-list(
-  #     role=ai_message$role,
-  #     content=list(name='sql_query',arguments=code))
-  #   
-  # }
+  if(ai_type %in% c('sql_query','dot')){
+
+    code <- ai_message$content |> extract_md_code()
+    ai_result <-list(
+      role=ai_message$role,
+      content=list(name='sql_query',arguments=code))
+
+  }
   log_debug(paste0('the ai message result is ====>', ai_result))
   return(ai_result)
 }

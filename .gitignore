@@ -34,3 +34,4 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 *.log
+llm_message.log
