@@ -33,4 +33,4 @@ docs/
 po/*~
 # RStudio Connect folder
 rsconnect/
-llm_message.log
+*.log
