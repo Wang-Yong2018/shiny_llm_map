@@ -5,7 +5,7 @@ box::use(shiny[NS,
                tags,
                titlePanel,
                uiOutput,
-               textInput, textOutput,
+               textInput, textOutput,updateTextAreaInput,
                renderText, renderImage, plotOutput,markdown,
                selectInput,
                textAreaInput,
@@ -48,18 +48,21 @@ ui <- function(id, label='sql_llm'){
   
   fluidPage(
     fluidRow(
-      column(width=12,
+      column(width=6,
              style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
              textAreaInput(
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
-               value= i18n$translate(''),
                placeholder = i18n$translate('Enter Prompts Here'),
                width='100%',
-               rows=5,
-               cols=10)
+               rows=10
+               )
+      ),
+      column(width=6,
+             style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
+             uiOutput(ns('sql_query')) 
       )
-    ),
+      ),
     fluidRow(
       column(width=3,
              actionButton(ns('goButton'), i18n$translate('ask ai')) ),
@@ -72,27 +75,34 @@ ui <- function(id, label='sql_llm'){
                                  label= i18n$translate('database list'),
                                  choices=db_id_list,
                                  multiple=FALSE,
-                                 selected=db_id_list[1]))
-      ),
+                                 selected=)
+      )),
     fluidRow(
       column(width=12,
              #style = 'border: solid 1px black; min-height: 100px;',     
              style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             uiOutput(ns('sql_query')) 
+             uiOutput(ns('sql_result')) 
       )
     ),
     fluidRow(
       column(width=6,
              # style = 'border: solid 1px black; min-height: 300px;',  
              style = "height: 400px; overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             uiOutput(ns('system_prompt'))),
+             textAreaInput(
+               inputId = ns('system_prompt'),
+               label=' system prompt',
+               placeholder = 'revise the initial system prompt here',
+               width='100%',
+               rows=50 )
+             ),
+      
       column(width=6,
              # style = 'border: solid 1px black; min-height: 300px;',  
              style = "min-height: 400px; overflow-y: scroll; border: 1px solid black; padding: 10px;",
              grVizOutput(ns('graph_erd'))
-      
-    ) 
-  ))
+             ) 
+      )
+  )
   }
 
 
@@ -100,31 +110,50 @@ ui <- function(id, label='sql_llm'){
 server <- function(id) {
   moduleServer(id, function(input, output, session) {
    
-    output$server_status<- renderText({
-      status_code <-'200' #get_server_status_code()
-      message <- paste0(
-        i18n$translate("server connection:"),
-        status_code
-      )
-      return(message)
-    })
-    
  
     get_reactive_sql_prompt <- reactive({
       get_sql_prompt(input$db_id, input$prompt)
     })
     
-    output$system_prompt <- renderText({
-      get_reactive_sql_prompt() |>
-      gsub(pattern= '\n', replacement = '<br />', x=_)
+    get_sql_message <- reactive({
       
+      log_debug(paste0(' input is :',input$prompt))
+      message <-  get_llm_result(prompt=get_reactive_sql_prompt(),
+                                 model_id=input$model_id,
+                                 llm_type = 'chat')
+      
+      if (is.null(message)){
+        message <- 'failed to detect!!!'
+      }else{
+        print(message)
+        ai_message <- get_ai_result(message,ai_type='sql_query')   
+        
+        
+        ai_sql_message <- list(role=ai_message$role,
+                               content=list(name = ai_message|>pluck('content','name'),
+                                            arguments= list(db_id =input$db_id,
+                                                            sql_query=ai_message|>pluck('content','arguments')
+                                            ))
+        )
+        log_debug(paste0('ai_sql_result===', ai_sql_message,sep='\n'))
+        sql_message <- 
+          get_agent_result(ai_sql_message)
+        # |>
+        #   kable()|>
+        #   mark_html()
+      }
+      #log_debug(paste0(' output is :',sql_result))
+      #log_info(sql_message) 
+      return(sql_message)
     })
     
-    # get_reactive_gv <- reactive({
-    #   gv_string <- get_gv_string(db_id = input$db_id, 
-    #                 model_id = input$model_id ) 
-    #   return(gv_string)
-    # })
+    observeEvent(input$db_id, {
+      new_prompt <-
+        get_reactive_sql_prompt() 
+      
+      updateTextAreaInput(session,'system_prompt', value = new_prompt)
+    })
+    
     
     output$graph_erd <- renderGrViz({
       
@@ -135,37 +164,23 @@ server <- function(id) {
       grViz(file_name ,width = "100%", height = "100%")
     })
 
+
     observeEvent(input$goButton, {
-      output$sql_query<- renderText({
-        log_debug(paste0(' input is :',input$prompt))
-        
-        message <-  get_llm_result(prompt=get_reactive_sql_prompt(),
-                                   model_id=input$model_id,
-                                   llm_type = 'chat')
-        
-        if (is.null(message)){
-          message <- 'failed to detect!!!'
-        }else{
-          print(message)
-          ai_message <- get_ai_result(message,ai_type='sql_query')   
-          
+      sql_message <- get_sql_message() 
+      log_info(paste('the final sql_message (query, result) is ====>',sql_message))
+      output$sql_query  <- renderText({ 
+        sql_message$query |>
+          gsub(pattern='\n',
+               replacement='<br />')
+        })
+      output$sql_result <- renderText({ 
+        sql_result <- sql_message$result |>
+          kable()|>
+          mark_html()
+        log_info(sql_result) 
+        sql_result
+        })
       
-          ai_sql_message <- list(role=ai_message$role,
-                                 content=list(name = ai_message|>pluck('content','name'),
-                                              arguments= list(db_id =input$db_id,
-                                                              sql_query=ai_message|>pluck('content','arguments')
-                                                              ))
-                                 )
-          log_debug(paste0('ai_sql_result===', ai_sql_message,sep='\n'))
-          sql_result <- 
-            get_agent_result(ai_sql_message) |>
-            kable()|>
-            mark_html()
-        }
-        #log_debug(paste0(' output is :',sql_result))
-        
-        return(sql_result)
-      })
     })
     
   })}

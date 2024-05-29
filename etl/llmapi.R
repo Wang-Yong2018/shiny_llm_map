@@ -221,7 +221,7 @@ get_llm_result <- function(prompt='你好，你是谁',
   post_body <- get_llm_post_data(prompt=prompt,history=history, 
                                  llm_type=llm_type,model_id=model_id, 
                                  img_url=img_url,funcs_json = funcs_json)
-  log_info(post_body)
+  #log_info(post_body)
   request <- 
     set_llm_conn() |>
     req_body_json(data=post_body,
@@ -240,7 +240,7 @@ get_llm_result <- function(prompt='你好，你是谁',
       response |> 
       resp_body_json() 
   }
-  log_info(response_message)
+  #log_info(response_message)
   return(  response_message)
 }
 
@@ -383,14 +383,14 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       list(role=ai_message$role, content=ai_message$content)
                       )
   log_debug(ai_result)
-  if(ai_type %in% c('sql_query','dot')){
-    
-    code <- ai_message$content |> extract_md_code()
-    ai_result <-list(
-      role=ai_message$role,
-      content=list(name='sql_query',arguments=code))
-    
-  }
+  # if(ai_type %in% c('sql_query','dot')){
+  #   
+  #   code <- ai_message$content |> extract_md_code()
+  #   ai_result <-list(
+  #     role=ai_message$role,
+  #     content=list(name='sql_query',arguments=code))
+  #   
+  # }
   log_debug(paste0('the ai message result is ====>', ai_result))
   return(ai_result)
 }

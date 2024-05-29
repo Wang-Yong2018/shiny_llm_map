@@ -9,7 +9,8 @@ box::use(purrr[map,imap,pluck],
 box::use(jsonlite[fromJSON, toJSON],
          stringr[str_glue])
 box::use(../global_constant[db_id_list, db_chinook_url,
-                            max_sql_query_rows,sql_agent_config_file
+                            max_sql_query_rows,sql_agent_config_file,
+                            IS_DEBUG
                             ])
 box::use(../etl/llmapi[get_llm_result, get_ai_result])
 
@@ -168,7 +169,11 @@ get_sql_result <- function(arguments){
   
   log_debug(paste0('get_sql_query function:===>',sep='    '))
   log_debug(paste0('db_id is ===> ',db_id, sep='    '))
-  log_debug(paste0('query is ===> ',query, sep='    '))
+  
+  #log_info(paste0('query is ===> ',query, sep='    '))
+  
+  
+  result=''
   result <- tryCatch(
     expr = {
       res <- 
@@ -176,9 +181,8 @@ get_sql_result <- function(arguments){
         dbSendQuery(query)
       result <-
         dbFetch(res,n=max_sql_query_rows)
-      dbClearResult(res) 
-      
-      return(result)
+      # dbClearResult(res) 
+      # log_info(paste('sql result is ===>', result))
     },
     error = function(e) {
       error_message <- e|>pluck('message')
@@ -187,9 +191,12 @@ get_sql_result <- function(arguments){
     }
 )
 # Close the database connection
-  dbDisconnect(conn)
+  on.exit(dbDisconnect(conn))
+  sql_message <- list(query = query, result=result)
   
-  return(result) 
+  log_info(paste('the sql result function result is sql_message(query, result)===>',sql_message))
+  
+  return(sql_message) 
 }
 
 #' @export
