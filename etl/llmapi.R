@@ -15,7 +15,8 @@ box::use(base64enc[base64encode])
 box::use(../etl/agent_sql[get_db_schema])
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
-                           model_id_list,vision_model_list ])
+                           model_id_list,vision_model_list,
+                           global_seed])
 
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
@@ -109,14 +110,18 @@ get_json_chat_data <- function(user_input, select_model, history=NULL){
   # The ai could remember what user said and conversation based on history topic'
   
   # # prepare the configure
-  # json_generationConfig = list( temperature = 0.5,
-  #                               maxOutputTokens = 1024)
+  json_generationConfig = list( temperature = 0.5,
+                               maxOutputTokens = 1024)
   # prepare the data
   # user_message <- list(role = 'user',content=user_input)
   
   json_contents <- get_chat_history(user_input,role='user',history)
   json_data <- list(model=select_model,
-                    messages = json_contents#,
+                    messages = json_contents,
+                    seed=global_seed,
+                    max_tokens=300,
+                    temperature=1,
+                    top_k = 0.1
                     #generationConfig = json_generationConfig
                     )
   

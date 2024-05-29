@@ -47,3 +47,4 @@ img_vision_prompt <- "As a image tag and classification expert, pls help to anal
 max_sql_query_rows <- 100
 
 sql_agent_config_file <- './data/sql_agent_prompt.txt'
+global_seed <- 42 

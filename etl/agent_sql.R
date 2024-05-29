@@ -18,11 +18,11 @@ get_db_conn <- function(db_id){
   conn <- switch(db_id,
                  chinook =dbConnect(SQLite(), db_chinook_url),
                  cyd = dbConnect(Postgres(),
-                                 dbname = 'research', 
-                                 host = '172.16.16.103', # i.e. 'ec2-54-83-201-96.compute-1.amazonaws.com'
-                                 port = 5432, # or any other port specified by your DBA
-                                 user = 'postgres',
-                                 password = 'postgres'))
+                                 dbname = Sys.getenv('cyd_db_name'),
+                                 host =  Sys.getenv('cyd_db_host'),
+                                 port =  Sys.getenv('cyd_db_port'),
+                                 user =  Sys.getenv('cyd_db_user'),
+                                 password = Sys.getenv('cyd_db_password')))
   return(conn)
 }
 
