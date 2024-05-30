@@ -27,14 +27,14 @@ box::use(../etl/llmapi[ get_llm_result, check_llm_connection,
                         get_chat_history,])
 box::use(purrrlyr[by_row],
          purrr[pluck])
-box::use(../global_constant[app_name,app_language, 
+box::use(../global_constant[app_name,app_language, i18n,
                             img_vision_prompt, 
                             model_id_list,vision_model_list,
                             db_id_list])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(shiny.i18n[Translator])
-i18n<- Translator$new(translation_csvs_path = "./translation/")
-i18n$set_translation_language(app_language)
+# i18n<- Translator$new(translation_csvs_path = "./translation/")
+# i18n$set_translation_language(app_language)
 box::use(cachem[cache_mem])
 history <- cache_mem()
 

@@ -6,10 +6,10 @@ box::use(logger[log_info, log_warn,
 
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
-                           model_id_list,vision_model_list ])
-box::use(shiny.i18n[Translator])
-i18n<- Translator$new(translation_csvs_path = "./translation/")
-i18n$set_translation_language(app_language)
+                           model_id_list,vision_model_list, i18n ])
+# box::use(shiny.i18n[Translator])
+# i18n<- Translator$new(translation_csvs_path = "./translation/")
+# i18n$set_translation_language(app_language)
 
 # shiny UI lib load
 box::use(shiny[NS,tagList,icon,h2,

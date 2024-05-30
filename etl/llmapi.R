@@ -57,7 +57,8 @@ get_select_model_name <- function(model_id) {
                        gpt4t = "openai/gpt-4-turbo",
                        gpt4v = "openai/gpt-4-vision-preview",
                        gemini = "google/gemini-pro-1.5",
-                       llama = 'meta-llama/llama-3-8b-instruct:free'
+                       llama = 'meta-llama/llama-3-8b-instruct:free',
+                       claude3s = 'anthropic/claude-3-sonnet:beta'
                        )
   return(select_model)
 }
@@ -120,8 +121,8 @@ get_json_chat_data <- function(user_input, select_model, history=NULL){
                     messages = json_contents,
                     seed=global_seed,
                     max_tokens=300,
-                    temperature=1,
-                    top_k = 0.1
+                    temperature=1#,
+                    #top_k = 0.1
                     #generationConfig = json_generationConfig
                     )
   
@@ -240,7 +241,8 @@ get_llm_result <- function(prompt='你好，你是谁',
       response |> 
       resp_body_json() 
   }
-  #log_info(response_message)
+  log_info(paste(' the llm post data is ===> ', post_body,sep='\n'))
+  log_info(paste(' the llm response data is ===> ', response_message ,sep='\n'))
   return(  response_message)
 }
 

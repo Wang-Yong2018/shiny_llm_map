@@ -26,13 +26,13 @@ box::use(../etl/chat_api[db_connect,
 box::use(../etl/img_tools[resize_image])
 
 # language config
-box::use(../global_constant[app_name,app_language, 
+box::use(../global_constant[app_name,app_language, i18n,
                            img_vision_prompt, 
                            model_id_list,vision_model_list ])
-box::use(shiny.i18n[Translator])
-
-i18n<- Translator$new(translation_csvs_path = "./translation/")
-i18n$set_translation_language(app_language)
+# box::use(shiny.i18n[Translator])
+# 
+# i18n<- Translator$new(translation_csvs_path = "./translation/")
+# i18n$set_translation_language(app_language)
 
 
 #' @export

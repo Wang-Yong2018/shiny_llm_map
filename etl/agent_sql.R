@@ -30,12 +30,13 @@ get_db_conn <- function(db_id){
 #' @export
 get_dbms_name <-function(db_id){
   
-  conn <- 
-    get_db_conn(db_id) 
-  
+  conn <-  get_db_conn(db_id) 
   connection_class <- conn|>class() |>pluck(1)
   
-  dbDisconnect(conn)
+  # Ensure the connection is closed when the function exits, regardless of how it exits
+  on.exit(dbDisconnect(conn), add = TRUE)
+  
+  
   dbms_name <- case_when(
     grepl('SQLite',connection_class) ~'sqlite',
     grepl('Postgres',connection_class) ~'postgres',
@@ -53,6 +54,10 @@ get_db_schema <- function(db_id){
   
   # Connect to SQLite database
   conn <- get_db_conn(db_id)
+  # Ensure the connection is closed when the function exits, regardless of how it exits
+  on.exit(dbDisconnect(conn), add = TRUE)
+  
+  
   # List the tables
   # """Return a list of dicts containing the table name and columns for each table in the database."""
   tables_list <- dbListTables(conn)
@@ -61,8 +66,6 @@ get_db_schema <- function(db_id){
     setNames(tables_list,tables_list) |> 
     purrr::imap(\(table_name,idx) dbListFields(conn,table_name))
   
-# Close the database connection
-  dbDisconnect(conn)
   db_schema <- table_dict |> toJSON(auto_unbox=TRUE, pretty=TRUE) 
   return( db_schema)
 }
@@ -70,8 +73,10 @@ get_db_schema <- function(db_id){
 
 #' @export
 get_sql_prompt <- function(db_id, user_prompt){
+  
   dbms_name      <- get_dbms_name(db_id)
   sql_ddl <- get_db_schema_text(db_id)
+  
   sql_sample <-''
   user_question <- user_prompt
   
@@ -145,18 +150,22 @@ GROUP BY tbl_name;"
 
 #' @export
 get_db_schema_text <- function(db_id){
+  
   # Connect to SQLite database
   conn <- get_db_conn(db_id)
+  # Ensure the connection is closed when the function exits, regardless of how it exits
+  on.exit(dbDisconnect(conn), add = TRUE)
+  
   sql <- get_schema_sql(db_id)
-  res <- conn |> 
-    dbSendQuery(sql)
   result <- 
-    dbFetch(res) |>
+    conn |> 
+    dbSendQuery(sql) |>
+    dbFetch() |>
     pluck(1) |>
     paste0(collapse = '\n\n')
-# Close the database connection
-  dbClearResult(res)
-  dbDisconnect(conn)
+  # Close the database connection
+  # dbClearResult(res)
+  # remove above code if the on.exit code run OK.
   
   return(result) 
 }
@@ -165,24 +174,21 @@ get_db_schema_text <- function(db_id){
 get_sql_result <- function(arguments){
   db_id=arguments$db_id
   query=arguments$sql_query
-  conn <- get_db_conn(db_id)
-  
+  model_id = arguments$model_id
   log_debug(paste0('get_sql_query function:===>',sep='    '))
   log_debug(paste0('db_id is ===> ',db_id, sep='    '))
   
-  #log_info(paste0('query is ===> ',query, sep='    '))
   
+  conn <- get_db_conn(db_id)
+  # Ensure the connection is closed when the function exits, regardless of how it exits
+  on.exit(dbDisconnect(conn), add = TRUE)
   
   result=''
   result <- tryCatch(
     expr = {
-      res <- 
-        conn |> 
-        dbSendQuery(query)
-      result <-
-        dbFetch(res,n=max_sql_query_rows)
-      # dbClearResult(res) 
-      # log_info(paste('sql result is ===>', result))
+      conn |> 
+        dbSendQuery(query) |>
+        dbFetch(n=max_sql_query_rows)
     },
     error = function(e) {
       error_message <- e|>pluck('message')
@@ -190,9 +196,9 @@ get_sql_result <- function(arguments){
       result <- error_message
     }
 )
-# Close the database connection
-  on.exit(dbDisconnect(conn))
-  sql_message <- list(query = query, result=result)
+  # Close the database connection
+  # on.exit(dbDisconnect(conn))
+  sql_message <- list(query = query, result=result,db_id=db_id,model_id=model_id)
   
   log_info(paste('the sql result function result is sql_message(query, result)===>',sql_message))
   

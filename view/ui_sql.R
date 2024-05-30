@@ -27,19 +27,18 @@ box::use(../etl/chat_api[db_connect,
                          read_messages, send_message, db_clear])
 
 box::use(../etl/img_tools[resize_image])
-box::use(../etl/agent_sql[get_db_schema,get_db_schema_text,get_dbms_name,
-                          get_sql_prompt,get_gv_string])
+box::use(../etl/agent_sql[get_sql_prompt,get_gv_string])
 # language config
-box::use(../global_constant[app_name,app_language, 
+box::use(../global_constant[app_name,app_language, i18n,
                            img_vision_prompt, 
                            model_id_list,vision_model_list,sql_model_id_list,
                            db_id_list])
 box::use(../etl/agent_router[get_agent_result])
 
-box::use(shiny.i18n[Translator])
-
-i18n<- Translator$new(translation_csvs_path = "./translation/")
-i18n$set_translation_language(app_language)
+# box::use(shiny.i18n[Translator])
+# 
+# i18n<- Translator$new(translation_csvs_path = "./translation/")
+# i18n$set_translation_language(app_language)
 
 
 #' @export
@@ -53,6 +52,7 @@ ui <- function(id, label='sql_llm'){
              textAreaInput(
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
+               value = '查询年龄最大的三个员工的姓名，出生日期',
                placeholder = i18n$translate('Enter Prompts Here'),
                width='100%',
                rows=10
@@ -112,7 +112,9 @@ server <- function(id) {
    
  
     get_reactive_sql_prompt <- reactive({
-      get_sql_prompt(input$db_id, input$prompt)
+      sql_query <-  get_sql_prompt(input$db_id, input$prompt)
+      
+     
     })
     
     get_sql_message <- reactive({
@@ -132,8 +134,9 @@ server <- function(id) {
         ai_sql_message <- list(role=ai_message$role,
                                content=list(name = ai_message|>pluck('content','name'),
                                             arguments= list(db_id =input$db_id,
-                                                            sql_query=ai_message|>pluck('content','arguments')
-                                            ))
+                                                            sql_query=ai_message|>pluck('content','arguments'),
+                                                            model_id=input$model_id )
+                                            )
         )
         log_debug(paste0('ai_sql_result===', ai_sql_message,sep='\n'))
         sql_message <- 
@@ -167,17 +170,22 @@ server <- function(id) {
 
     observeEvent(input$goButton, {
       sql_message <- get_sql_message() 
-      log_info(paste('the final sql_message (query, result) is ====>',sql_message))
+      #log_info(paste('the final sql_message (query, result) is ====>',sql_message))
       output$sql_query  <- renderText({ 
-        sql_message$query |>
+        sql_query <- sql_message$query
+        format_db_id <- paste0('\n --- database id is ',input$db_id)
+        format_model_id <- paste0('\n--- llm model id is :',input$model_id)
+        sql_message <- 
+          paste(sql_query, format_db_id, format_model_id, sep='\n') |>
           gsub(pattern='\n',
                replacement='<br />')
+        
         })
       output$sql_result <- renderText({ 
         sql_result <- sql_message$result |>
           kable()|>
           mark_html()
-        log_info(sql_result) 
+        #log_info(sql_result) 
         sql_result
         })
       

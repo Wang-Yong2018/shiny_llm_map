@@ -26,14 +26,14 @@ box::use(purrrlyr[by_row],
          purrr[pluck,map_chr, keep])
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
-                           model_id_list,vision_model_list ])
+                           model_id_list,vision_model_list,i18n ])
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(cachem[cache_mem])
 box::use(jsonlite[read_json, toJSON,fromJSON])
 history <- cache_mem()
-box::use(shiny.i18n[Translator])
-i18n<- Translator$new(translation_csvs_path = "./translation/")
-i18n$set_translation_language(app_language)
+# box::use(shiny.i18n[Translator])
+# i18n<- Translator$new(translation_csvs_path = "./translation/")
+# i18n$set_translation_language(app_language)
 
 box::use(stats[runif])
 box::use(../etl/agent_router[get_agent_result])

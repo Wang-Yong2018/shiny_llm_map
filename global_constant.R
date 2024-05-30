@@ -23,16 +23,18 @@ app_language = 'cn'
 
 box::use(shiny.i18n[Translator])
 
-i18n<- Translator$new(translation_csvs_path = "./translation/")
+i18n<- Translator$new(translation_csvs_path = "./translation/",translation_csv_config = './translation/config.yaml')
 i18n$set_translation_language(app_language)
+
+
 IS_DEBUG <- FALSE
 # app level
 app_name <- i18n$translate('AI_chatbox')
 # time series name
 ts_var_name <-'biz_date'
 # ts_var_name <-'rq' 
-model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v')
-sql_model_id_list <- c('gemini', 'gpt35','gpt4t')
+model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v','claude3s')
+sql_model_id_list <- c('gpt35','gpt4','gemini', 'llama','claude3s')
 
 db_id_list <-c('chinook','cyd')
 
