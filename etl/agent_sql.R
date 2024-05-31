@@ -170,11 +170,15 @@ get_db_schema_text <- function(db_id){
   return(result) 
 }
 
+
 #' @export
 get_sql_result <- function(arguments){
   db_id=arguments$db_id
-  query=arguments$sql_query
   model_id = arguments$model_id
+  query <- 
+    arguments$sql_query |>
+    extract_md_code()
+  
   log_debug(paste0('get_sql_query function:===>',sep='    '))
   log_debug(paste0('db_id is ===> ',db_id, sep='    '))
   
@@ -225,6 +229,29 @@ get_gv_string <- function(db_id, model_id){
   ai_result <- get_ai_result(llm_result,ai_type='dot') 
   result <- ai_result$content
   log_debug(paste0('gv_string ---->',result))
+  return(result)
+  
+}
+
+
+
+extract_md_code<- function(text){
+  
+  # Extract the code inside the ``` ```
+  # Remove the backticks from the extracted string
+  
+  code <- 
+    text |>
+    gsub(pattern='```\\w*(\n){0,1}',replacement='',x=_)
+  
+  if(is.null(code)){
+    log_error(paste('extract_md_code error, match is NULL. retunr original text'))
+    
+    result <- text
+  } else{
+    result <- code
+  } 
+  
   return(result)
   
 }

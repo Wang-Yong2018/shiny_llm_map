@@ -47,7 +47,7 @@ server <- function(input, output) {
   ui_agent$server('agent_llm')
   ui_sql$server('sql_llm')
   # note: it must add each of module server code here .
-  
+  #TODO add a message notice for llm service down or credit use out
   output$mainPanelContent <- renderUI({
      switch(input$sidebar,
             'chat_echo'=ui_echo$ui('chat_echo'),

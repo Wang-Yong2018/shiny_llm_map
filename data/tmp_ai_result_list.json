@@ -1,0 +1,22 @@
+{
+  "gpt3": {
+    "role": "assistant",
+    "content": "-- 查询年龄最大的三个员工\nWITH Employee_Age AS (\n    SELECT EmployeeId, FirstName, LastName, BirthDate, \n           DATE('now') - BirthDate AS Age\n    FROM employees\n)\nSELECT EmployeeId, FirstName, LastName, Age\nFROM Employee_Age\nORDER BY Age DESC\nLIMIT 3;"
+  },
+  "gpt4t": {
+    "role": "assistant",
+    "content": "```sql\n-- Retrieve the three oldest employees from the employees table\nWITH EmployeeAges AS (\n    SELECT EmployeeId, FirstName, LastName, BirthDate\n    FROM employees\n    WHERE BirthDate IS NOT NULL\n    ORDER BY BirthDate ASC\n    LIMIT 3\n)\nSELECT *\nFROM EmployeeAges;\n```"
+  },
+  "gemini": {
+    "role": "assistant",
+    "content": "-- select the top 3 employees with the oldest age;\nSELECT EmployeeId, FirstName, LastName, BirthDate\nFROM employees\nORDER BY BirthDate\nLIMIT 3;\n"
+  },
+  "llama": {
+    "role": "assistant",
+    "content": "--  Query to find the three oldest employees\nWITH oldest_employees AS (\n  SELECT *, DATEDIFF('now', BirthDate) AS Age\n  FROM employees\n  ORDER BY Age DESC\n  LIMIT 3\n)\nSELECT *\nFROM oldest_employees;"
+  },
+  "claude3": {
+    "role": "assistant",
+    "content": "-- 查询年龄最大的三个员工\nWITH Employee_Age AS (\n    SELECT EmployeeId, FirstName, LastName, BirthDate, \n           DATE('now') - BirthDate AS Age\n    FROM employees\n)\nSELECT EmployeeId, FirstName, LastName, Age\nFROM Employee_Age\nORDER BY Age DESC\nLIMIT 3;"
+  }
+}

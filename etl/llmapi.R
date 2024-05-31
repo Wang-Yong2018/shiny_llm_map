@@ -9,7 +9,7 @@ box::use(purrr[map_dfr, pluck])
 box::use(cachem[cache_disk,cache_mem],
          memoise[memoise])
 box::use(dplyr[as_tibble])
-box::use(stringr[str_extract])
+box::use(stringr[str_extract,str_glue])
 box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
 box::use(../etl/agent_sql[get_db_schema])
@@ -51,14 +51,19 @@ set_llm_conn <- function(
 
 get_select_model_name <- function(model_id) {
   select_model= switch(model_id,
-                       gpt =   "openai/gpt-3.5-turbo-0125", 
-                       gpt35 = "openai/gpt-3.5-turbo-0125", 
+                       gpt =   "openai/gpt-3.5-turbo", 
+                       gpt3 =   "openai/gpt-3.5-turbo", 
+                       gpt35 = "openai/gpt-3.5-turbo", 
                        gpt4 = "openai/gpt-4",
                        gpt4t = "openai/gpt-4-turbo",
                        gpt4v = "openai/gpt-4-vision-preview",
                        gemini = "google/gemini-pro-1.5",
-                       llama = 'meta-llama/llama-3-8b-instruct:free',
-                       claude3s = 'anthropic/claude-3-sonnet:beta'
+                       llama = 'meta-llama/llama-3-70b-instruct',
+                       claude3s = 'anthropic/claude-3-sonnet:beta',
+                       mixtral = 'mistralai/mixtral-8x7b-instruct',
+                       deepseekv2 = 'deepseek/deepseek-chat',
+                       "openai/gpt-3.5-turbo"
+                       
                        )
   return(select_model)
 }
@@ -235,7 +240,8 @@ get_llm_result <- function(prompt='你好，你是谁',
      req_perform() )
   
   if('try-error' %in% class(response)){
-    response_message <- 'connection failed! pls check network' 
+    response_message <- str_glue('ERROR: large language model({model_id}) connection failed!') 
+    log_error(paste0('get_llm_result failed, the reason is: ==?',response ))
   } else {
     response_message <- 
       response |> 
@@ -338,42 +344,12 @@ llm_func <- function( prompt, model_id='llama', history=NULL){
 }
 
 
-extract_md_code<- function(text){
-  
-  # Extract the code inside the ``` ```
-  # Remove the backticks from the extracted string
-  
-  code_list <- 
-    text |>
-    str_extract(string=_, pattern = "```?[\\s\\S]*```") |>
-    gsub(pattern = "```", replacement="", x=_) |>
-    strsplit(x=_, split="\n")
-  
-  min_code_length= 8  # 'select 1 length is 8. it is minimum sql length'
-  # Remove the first line (language identifier)
-  
-  extract_code  <- code_list[[1]][-1] |> 
-    
-    paste0(collapse = '\n')
-  if(is.null(extract_code)|length(extract_code )<= min_code_length){
-    log_error(paste('extract_md_code error:',sep = '.....'))
-    log_error(paste('extract code ===> ',extract_code,sep = '.....'))
-    log_error(paste('raw_text ===>:',text,sep = '.....'))
-    
-    result <- text
-  } else{
-    result <-extract_code
-  } 
-  
-  return(result)
-  
-}
-
 
 #' @export
-get_ai_result <- function(ai_response,ai_type='chat'){
+get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
   
   ai_message <- ai_response |> pluck('choices',1,'message')
+  ai_model_name <- ai_response|>pluck('model')
   log_info(paste0('the get_ai_result function ai_message is======>',ai_message))
   finish_reason <- ai_response |> pluck('choices',1,'finish_reason')
   
@@ -385,14 +361,27 @@ get_ai_result <- function(ai_response,ai_type='chat'){
                       list(role=ai_message$role, content=ai_message$content)
                       )
   log_debug(ai_result)
-  if(ai_type %in% c('sql_query','dot')){
+  if(ai_type %in% c('sql_query','dot','sql')){
+    
+    code <- ai_message$content
+    if(grepl('ERROR', code)) {
+      code <- paste0('-- ',code)
+    }
+    db_id <- parameter$db_id
+    model_id <- ai_model_name
+    ai_result <- list( role=ai_message$role,
+                       content=list(name = 'sql_query',
+                                    arguments= list(db_id =db_id,
+                                                    sql_query=code,
+                                                    model_id=ai_model_name) ) 
+                       )
+      
+    }
+    # ai_result <-list(
+    #   role=ai_message$role,
+    #   content=list(name='sql_query',arguments=code))
 
-    code <- ai_message$content |> extract_md_code()
-    ai_result <-list(
-      role=ai_message$role,
-      content=list(name='sql_query',arguments=code))
-
-  }
+  
   log_debug(paste0('the ai message result is ====>', ai_result))
   return(ai_result)
 }

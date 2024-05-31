@@ -13,10 +13,14 @@ box::use(shiny[NS,
                hr,
                reactiveValues, observe, observeEvent,reactive,
                fileInput,imageOutput,
+               renderUI
 ])
 box::use(knitr[kable],
          markdown[mark_html],
-         DiagrammeR[grViz, renderGrViz, grVizOutput])
+         DiagrammeR[grViz, renderGrViz, grVizOutput],
+         DT[renderDataTable],
+         jsonlite[toJSON,fromJSON])
+
 box::use(logger[log_info, log_debug, log_error])
 box::use(purrrlyr[by_row],
          purrr[pluck])
@@ -48,18 +52,19 @@ ui <- function(id, label='sql_llm'){
   fluidPage(
     fluidRow(
       column(width=6,
-             style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
+             style = "height: 200px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
              textAreaInput(
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
                value = '查询年龄最大的三个员工的姓名，出生日期',
                placeholder = i18n$translate('Enter Prompts Here'),
                width='100%',
-               rows=10
+               rows=8
                )
       ),
       column(width=6,
-             style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
+             textOutput(i18n$translate('AI generated SQL')),
+             style = "height: 200px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
              uiOutput(ns('sql_query')) 
       )
       ),
@@ -80,7 +85,7 @@ ui <- function(id, label='sql_llm'){
     fluidRow(
       column(width=12,
              #style = 'border: solid 1px black; min-height: 100px;',     
-             style = "height: 300px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
+             style = "height: 200px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
              uiOutput(ns('sql_result')) 
       )
     ),
@@ -116,7 +121,7 @@ server <- function(id) {
       
      
     })
-    
+    # TODO split get sql message in to get_ai_messag / get_sql_message
     get_sql_message <- reactive({
       
       log_debug(paste0(' input is :',input$prompt))
@@ -124,30 +129,21 @@ server <- function(id) {
                                  model_id=input$model_id,
                                  llm_type = 'chat')
       
-      if (is.null(message)){
-        message <- 'failed to detect!!!'
+      result <- '' 
+      if (is.null(message)| grepl('ERROR',toJSON(message))){
+        result <- paste0('--', message) 
+        
+        
       }else{
         print(message)
-        ai_message <- get_ai_result(message,ai_type='sql_query')   
+        sql_parameter <- list(db_id=input$db_id)
+        ai_sql_message <- get_ai_result(message,ai_type='sql_query',sql_parameter )   
         
-        
-        ai_sql_message <- list(role=ai_message$role,
-                               content=list(name = ai_message|>pluck('content','name'),
-                                            arguments= list(db_id =input$db_id,
-                                                            sql_query=ai_message|>pluck('content','arguments'),
-                                                            model_id=input$model_id )
-                                            )
-        )
-        log_debug(paste0('ai_sql_result===', ai_sql_message,sep='\n'))
         sql_message <- 
           get_agent_result(ai_sql_message)
-        # |>
-        #   kable()|>
-        #   mark_html()
+          result <- sql_message
       }
-      #log_debug(paste0(' output is :',sql_result))
-      #log_info(sql_message) 
-      return(sql_message)
+      return(result)
     })
     
     observeEvent(input$db_id, {
@@ -171,24 +167,39 @@ server <- function(id) {
     observeEvent(input$goButton, {
       sql_message <- get_sql_message() 
       #log_info(paste('the final sql_message (query, result) is ====>',sql_message))
+    
       output$sql_query  <- renderText({ 
-        sql_query <- sql_message$query
-        format_db_id <- paste0('\n --- database id is ',input$db_id)
-        format_model_id <- paste0('\n--- llm model id is :',input$model_id)
+        log_info(sql_message)
+        query_sql<- sql_message|>pluck('query') 
+        query_model_id <- sql_message |> pluck('model_id')
+        query_db_id <- sql_message |> pluck('db_id')
+        
+        if (is.null(query_sql)){
+          query_sql <- sql_message |> toJSON(pretty=T, auto_unbox = T)
+        }
+        # todo use pluck to return null, if expect key no exist. It help to skip error bug
+        
+        format_db_id <- paste0('\n --- database id is ',query_db_id)
+        format_model_id <- paste0('\n--- llm model id is :',query_model_id)
         sql_message <- 
-          paste(sql_query, format_db_id, format_model_id, sep='\n') |>
+          paste(query_sql, format_db_id, format_model_id, sep='\n') |>
           gsub(pattern='\n',
                replacement='<br />')
         
         })
-      output$sql_result <- renderText({ 
-        sql_result <- sql_message$result |>
-          kable()|>
-          mark_html()
-        #log_info(sql_result) 
-        sql_result
-        })
+      
+      
+      output$sql_result <- renderUI({
+        
+        sql_result <- sql_message|>pluck('result')
+        is_data.frame <- class(sql_result) |> grepl('data.frame',x=_) |> any()
+        if (is_data.frame == TRUE) {
+          renderDataTable(sql_result, options = list(pageLength = 20))
+        } else {
+          renderText(sql_result)
+        }
+      }) 
       
     })
     
-  })}
+    })}
