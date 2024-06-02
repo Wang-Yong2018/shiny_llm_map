@@ -50,8 +50,6 @@ ui <- function(id, label='agent_llm'){
   ns <- NS(id)
 
   fluidPage(
-     titlePanel("LLM agent playgroud"),
-     #ns <- NS(id),
      tags$head(
        tags$script(src = "script.js"),
        tags$link(rel = "stylesheet", type = "text/css", href = "styling.css")

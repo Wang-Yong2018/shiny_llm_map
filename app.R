@@ -27,16 +27,13 @@ box::use(
  )
 
 ui <- dashboardPage(
-  title = app_name,
-  dashboardHeader(),
+ 
+  dashboardHeader(title =app_name),
   
-  dashboardSidebar(
-    collapsed = FALSE,
-    ui_sidebar$ui('menu')
-  ),
-  dashboardBody(
-    uiOutput("mainPanelContent")
-  ) 
+  dashboardSidebar(collapsed = FALSE,
+                   ui_sidebar$ui('menu')
+                   ),
+  dashboardBody(uiOutput("mainPanelContent")) 
 )
 
 # Define server logic required to draw a histogram
@@ -48,20 +45,22 @@ server <- function(input, output) {
   ui_sql$server('sql_llm')
   # note: it must add each of module server code here .
   #TODO add a message notice for llm service down or credit use out
-  output$mainPanelContent <- renderUI({
-     switch(input$sidebar,
-            'chat_echo'=ui_echo$ui('chat_echo'),
-            "chat_llm"= ui_chat$ui('chat_llm') ,
-            "vision_llm"= ui_vision$ui('vision_llm'),#h2('image Under construction') ,
-            # "chat_openai"= h2('openai Under construction') ,
-            "agent_llm"= ui_agent$ui('agent_llm') ,
-            "sql_llm"=  ui_sql$ui('sql_llm') ,
-            "chat_debate"= h2('debate Under construction') ,
-            "chat_rag"= h2('rag Under construction') ,
-            "chat_voice"= h2('voice Under construction') ,
-            "chat_mm"= h2('multi media model Under construction')#,
-     )
-  })
+    
+    output$mainPanelContent <- renderUI({
+      switch(input$sidebar,
+             #'chat_echo'=ui_echo$ui('chat_echo'),
+             "chat_llm"= ui_chat$ui('chat_llm'), 
+             "vision_llm"= ui_vision$ui('vision_llm'),#h2('image Under construction') ,
+             "agent_llm"= ui_agent$ui('agent_llm') ,
+             "sql_llm"=  ui_sql$ui('sql_llm') ,
+             "rag_llm"= h2('Under Construction') 
+             # "chat_openai"= h2('openai Under construction') ,
+             #"chat_debate"= h2('debate Under construction') ,
+             #"chat_voice"= h2('voice Under construction') ,
+             #"chat_mm"= h2('multi media model Under construction')#,
+      )
+    })
+    
   
 }
 

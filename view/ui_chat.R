@@ -83,9 +83,7 @@ ui <- function(id, label='chat_llm'){
     ),
     fluidRow(
       column(width=7,
-             tags$div(textAreaInput(ns("msg_text"),
-                                    label = NULL
-             ) )),
+             tags$div(textAreaInput(ns("msg_text"), label = NULL ) )),
       column(width=2,selectInput(ns('model_id'),
                                  label= i18n$translate('model list'),
                                  choices=model_id_list,
@@ -93,29 +91,27 @@ ui <- function(id, label='chat_llm'){
                                  selected=model_id_list[1])),
       column(width=2,
              actionButton(ns("msg_button"),
-                          "发送" ),
-             style="display:flex")
-
+                          i18n$translate('Send'),
+             style="display:flex") )
       ),
     fluidRow(
       column(width=3,
-             textInput(ns("msg_username"), "用户名:", value = "八卦之人" )
+             textInput(ns("msg_username"),  i18n$translate("User Name"), value =  i18n$translate("Stranger" ))
              ),
       column(width=2,
-             actionButton(ns("msg_clearchat"), "清除对话")
+             actionButton(ns("msg_clearchat"),  i18n$translate("Clear Chat"))
              )
     )
 
-    
 )}
 
 
 #' @export
 server <- function(id) {
   moduleServer(id, function(input, output, session,chat_history=NULL) {
-    shiny::updateTextInput(inputId = "msg_username",
-                           value = paste0("八卦之人",
-                                          round(runif(n=1, min=1000,max = 9999)),'号'))
+    # shiny::updateTextInput(inputId = "msg_username",
+    #                        value = paste0("八卦之人",
+    #                                       round(runif(n=1, min=1000,max = 9999)),'号'))
     
     con <- db_connect(model_db='gemini')
     

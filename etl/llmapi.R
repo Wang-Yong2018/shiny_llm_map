@@ -16,7 +16,8 @@ box::use(../etl/agent_sql[get_db_schema])
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
                            model_id_list,vision_model_list,
-                           global_seed])
+                           global_seed,
+                           i18n])
 
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
@@ -82,7 +83,7 @@ get_chat_history <- function(message, role='user', last_history=NULL){
   # If last_history is NULL, initialize the chat history
   if (is.null(last_history)) {
     last_history <- list(list(role='system',
-                              content = "你是一个专业的人工智能助理，工作语言是中文。"))
+                              content =  i18n$translate("")))
     
   } 
   new_history <- last_history

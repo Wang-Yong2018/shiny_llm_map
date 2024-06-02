@@ -33,9 +33,9 @@ ui <- function(id,label='sidebar'){
   tagList(
     sidebarMenu( id='sidebar',collapsed=TRUE,
                  
-                 menuItem(i18n$translate('navigate'),icon=icon('dashboard'),startExpanded =F,
+                 menuItem(i18n$translate('navigate'),icon=icon('dashboard'),startExpanded =F
                           #menuSubItem(i18n$translate("intro"), tabName='ds_intro',icon=icon('eye'),selected=TRUE),
-                          menuSubItem(i18n$translate("chat_echo"), tabName = 'chat_echo',icon=icon('th'))
+                          #menuSubItem(i18n$translate("chat_echo"), tabName = 'chat_echo',icon=icon('th'))
                           
                  ),
                  menuItem(i18n$translate('ai_chats'),icon=icon('dashboard'),startExpanded =T,
@@ -43,10 +43,10 @@ ui <- function(id,label='sidebar'){
                           menuSubItem(i18n$translate("vision_llm"), tabName = 'vision_llm',icon=icon('image')),
                           menuSubItem(i18n$translate("agent_llm"), tabName = 'agent_llm',icon=icon('bridge')),
                           menuSubItem(i18n$translate("sql_llm"), tabName = 'sql_llm',icon=icon('database'),selected=TRUE),
-                          menuSubItem(i18n$translate("chat_debate"), tabName = 'chat_debate',icon=icon('fire')),
-                          menuSubItem(i18n$translate("chat_rag"), tabName = 'chat_rag',icon=icon('file')),
-                          menuSubItem(i18n$translate("chat_voice"), tabName = 'chat_voice',icon=icon('radio')),
-                          menuSubItem(i18n$translate("chat_mm"), tabName = 'chat_mm',icon=icon('bridge'))
+                          menuSubItem(i18n$translate("rag_llm"), tabName = 'rag_llm',icon=icon('file'))
+                          #menuSubItem(i18n$translate("chat_debate"), tabName = 'chat_debate',icon=icon('fire')),
+                          #menuSubItem(i18n$translate("chat_voice"), tabName = 'chat_voice',icon=icon('radio')),
+                          #menuSubItem(i18n$translate("chat_mm"), tabName = 'chat_mm',icon=icon('bridge'))
                  )  
                  
     ))

@@ -1,20 +1,16 @@
 box::use(shiny[NS,
                moduleServer, 
-               h2,h3,tagList,div,a,
+               h2,h3,tagList,div,a, tags, hr,
                fluidPage, fluidRow, column,
-               tags,
+               tabsetPanel,tabPanel,
                titlePanel,
-               uiOutput,
-               textInput, textOutput,updateTextAreaInput,
+               selectInput, textInput, textOutput,
+               textAreaInput,updateTextAreaInput, 
                renderText, renderImage, plotOutput,markdown,
-               selectInput,
-               textAreaInput,
                actionButton,
-               hr,
                reactiveValues, observe, observeEvent,reactive,
                fileInput,imageOutput,
-               renderUI
-])
+               uiOutput, renderUI ])
 box::use(knitr[kable],
          markdown[mark_html],
          DiagrammeR[grViz, renderGrViz, grVizOutput],
@@ -56,59 +52,40 @@ ui <- function(id, label='sql_llm'){
              textAreaInput(
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
-               value = '查询年龄最大的三个员工的姓名，出生日期',
+               value = i18n$translate('Query the top 3 total spent buyer name, country and total spend, and spend times.'),
                placeholder = i18n$translate('Enter Prompts Here'),
                width='100%',
                rows=8
                )
       ),
       column(width=6,
-             textOutput(i18n$translate('AI generated SQL')),
-             style = "height: 200px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             uiOutput(ns('sql_query')) 
-      )
-      ),
-    fluidRow(
-      column(width=3,
-             actionButton(ns('goButton'), i18n$translate('ask ai')) ),
-      column(width=3,selectInput(ns('model_id'),
+             actionButton(ns('goButton'), i18n$translate('Ask Agent')) ,
+             selectInput(ns('model_id'),
                                  label= i18n$translate('model list'),
                                  choices=sql_model_id_list,
                                  multiple=FALSE,
-                                 selected='gpt')),
-      column(width=3,selectInput(ns('db_id'),
+                                 selected='gpt'),
+             selectInput(ns('db_id'),
                                  label= i18n$translate('database list'),
                                  choices=db_id_list,
                                  multiple=FALSE,
                                  selected=)
       )),
     fluidRow(
-      column(width=12,
-             #style = 'border: solid 1px black; min-height: 100px;',     
-             style = "height: 200px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             uiOutput(ns('sql_result')) 
+      tabsetPanel( 
+        tabPanel(i18n$translate('sql_result'),   uiOutput(ns('sql_result')) ),
+        tabPanel(i18n$translate('system_prompt'),   textAreaInput(ns('system_prompt'),label=' system prompt',
+                                                                  placeholder = 'revise the initial system prompt here',
+                                                                   rows=50 )) ,
+        tabPanel(i18n$translate('graph_erd'),   grVizOutput(ns('graph_erd'))) ,
+        tabPanel(i18n$translate('AI generated SQL'),   uiOutput(ns('sql_query'))) ,
+        selected = i18n$translate('sql_result'),
+ 
       )
-    ),
-    fluidRow(
-      column(width=6,
-             # style = 'border: solid 1px black; min-height: 300px;',  
-             style = "height: 400px; overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             textAreaInput(
-               inputId = ns('system_prompt'),
-               label=' system prompt',
-               placeholder = 'revise the initial system prompt here',
-               width='100%',
-               rows=50 )
-             ),
-      
-      column(width=6,
-             # style = 'border: solid 1px black; min-height: 300px;',  
-             style = "min-height: 400px; overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             grVizOutput(ns('graph_erd'))
-             ) 
-      )
-  )
-  }
+    )
+ 
+    
+ )}
 
 
 #' @export

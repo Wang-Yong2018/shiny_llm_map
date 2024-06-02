@@ -9,7 +9,7 @@ sql_llm, AI查数
 chat_AIs, AI抢答
 chat_openai, GPTAI
 chat_debate, AI辩论
-chat_rag, 资料洞察
+rag_llm, 资料洞察
 chat_voice, 智慧辨音
 chat_image, 智慧识图
 chat_mm, 智慧多模
@@ -17,7 +17,11 @@ vision_llm, AI识图
 ask ai, AI回答
 Prompt, 提示词
 Choose file to upload, 上传文件
+Send, 发送
+Ask Agent, 询问代理
 Browse..., 选择文件
+User Name, 用户名
+Stranger, 陌客 
 Enter Prompts Here, 请输入提示词
 server connection:, 服务器状态
 failed to detect!!!, 识别失败，请重试！！！
@@ -27,6 +31,8 @@ LLM agent playgroud, AI代理试验场
 sql agent playgroud, AI查数试验场
 database list, 数据库列表
 model list, AI模型列表
+You are a helpful AI assitant, 你是一个专业的人工智能助理，工作语言是中文。
+Query the top 3 total spent buyer name, country and total spend, and spend times., 查询购买金额最大的5个顾客的姓名，国家，和总购买金额,购买次数。
 AI generated SQL, AI编写的SQL
 analyze the photo feedback the topic and main element list, 识别输入的图片 反馈 1. 图片主题；2. 图中主要元素
 As a image tag and classification expert pls help to analyse the image. Provide follow output:\n1. main topic tag and elements list\n2. using markdown format\n, 作为图像识别专家，请分析图像并提供如下结果：\n1. 图片主题和主要元素清单 \n2.使用markdown 格式输出

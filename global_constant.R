@@ -16,10 +16,9 @@ log_appender(appender_file(log_file,max_line=1000,max_files = 3L))
 
 # 英文环境 
 #Sys.setlocale(category = "LC_ALL",locale = "English_United States")
-# 中文环境
 #Sys.setlocale(category = "LC_ALL",locale = "Chinese (Simplified)_China.utf8")
 
-app_language = 'cn'
+app_language = 'en'
 
 box::use(shiny.i18n[Translator])
 
@@ -29,14 +28,14 @@ i18n$set_translation_language(app_language)
 
 IS_DEBUG <- FALSE
 # app level
-app_name <- i18n$translate('AI_chatbox')
+app_name <- i18n$translate('ai_chatbox')
 # time series name
 ts_var_name <-'biz_date'
 # ts_var_name <-'rq' 
 model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v','claude3s')
 sql_model_id_list <- c('gpt35','gemini', 'claude3s','deepseekv2')
 
-db_id_list <-c('chinook','cyd')
+db_id_list <-c('chinook')
 
 db_chinook_url <- './data/chinook.db'
 # group key name
