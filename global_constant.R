@@ -35,7 +35,7 @@ ts_var_name <-'biz_date'
 model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v','claude3s')
 sql_model_id_list <- c('gpt35','gemini', 'claude3s','deepseekv2')
 
-db_id_list <-c('chinook')
+db_id_list <-c('chinook','cyd')
 
 db_chinook_url <- './data/chinook.db'
 # group key name

@@ -32,14 +32,12 @@ req_perform_quick <- memoise(req_perform,cache = cache_dir)
 
 set_llm_conn <- function(
     url = "https://openrouter.ai/api/v1/chat/completions",
-    max_seconds=3
+    timeout_seconds=3
     ) {
-# this is openrouter llm connection 
   api_key = Sys.getenv('OPENROUTER_API_KEY') 
-  #prompt_mesage <- 'who are you?'
-  #model_type='gemini-pro:generateContent' 
+  
   req <- request(url) |>
-    req_timeout(10)|>
+    req_timeout(timeout_seconds)|>
     req_headers(
       Authorization=paste0('Bearer ',api_key) )|>
     req_retry(  max_tries = 3,
@@ -55,11 +53,11 @@ get_select_model_name <- function(model_id) {
                        gpt =   "openai/gpt-3.5-turbo", 
                        gpt3 =   "openai/gpt-3.5-turbo", 
                        gpt35 = "openai/gpt-3.5-turbo", 
-                       gpt4 = "openai/gpt-4",
-                       gpt4t = "openai/gpt-4-turbo",
-                       gpt4v = "openai/gpt-4-vision-preview",
+                       gpt4 = "openai/gpt-4o",
+                       gpt4o = "openai/gpt-4o",
+                       # gpt4v = "openai/gpt-4-vision-preview",
                        gemini = "google/gemini-pro-1.5",
-                       llama = 'meta-llama/llama-3-70b-instruct',
+                       llama = 'meta-llama/llama-3-8b-instruct',
                        claude3s = 'anthropic/claude-3-sonnet:beta',
                        mixtral = 'mistralai/mixtral-8x7b-instruct',
                        deepseekv2 = 'deepseek/deepseek-chat',
@@ -232,8 +230,7 @@ get_llm_result <- function(prompt='你好，你是谁',
   request <- 
     set_llm_conn() |>
     req_body_json(data=post_body,
-                  type = "application/json") #|>
-    #req_error(is_error = \(resp) FALSE) 
+                  type = "application/json") 
   
   # get response while handling the exception 
   response <- try(  
@@ -241,6 +238,7 @@ get_llm_result <- function(prompt='你好，你是谁',
      req_perform() )
   
   if('try-error' %in% class(response)){
+    response
     response_message <- str_glue('ERROR: large language model({model_id}) connection failed!') 
     log_error(paste0('get_llm_result failed, the reason is: ==?',response ))
   } else {
@@ -296,54 +294,57 @@ llm_chat <- function( user_input, model_id='llama', history=NULL){
 
 
 
-#' @export
-llm_func <- function( prompt, model_id='llama', history=NULL){
-
-  # prepare the data
-  json_contents <- list(list(role = 'user',content=prompt)
-                        # this is a list of messages
-                        
-  )
-  json_function <- fromJSON('./data/tools_config.json',simplifyVector = F) 
-  
-  json_data <- list(model="openai/gpt-3.5-turbo",
-                    messages = json_contents,
-                    functions= json_function,
-                    function_call='auto'
-                    #generationConfig = json_generationConfig
-  )
-  # setup the request message
-  request <- 
-    set_llm_conn() |>
-    req_body_json(data=json_data,
-                  type = "application/json") |>
-    req_error(is_error = \(resp) FALSE) 
-  
-  # get response while handling the exception 
-  response <- try(  
-    request |>
-      req_perform() )
-  
-  if('try-error' %in% class(response)){
-    response_message <- 'connection failed! pls check network' 
-  } else {
-    response_message <- 
-      response |> 
-      resp_body_json()|> 
-      pluck('choices',1) # R list index from 1
-      # note: in R language, the index is come from 1 instead of 0. In python, it is from 0
-  }
-
-  result <- switch(response_message$finish_reason,
-                   stop=response_message|>pluck('message','content'),
-                   function_call=response_message|>pluck('message','function_call','arguments'),
-                   response_message|>pluck('message','content')
-                   )
-  
-  return(result)
-  
-}
-
+#' #' @export
+#' llm_func <- function( prompt, model_id='llama', history=NULL){
+#' 
+#'   # prepare the data
+#'   json_contents <- list(list(role = 'user',content=prompt)
+#'                         # this is a list of messages
+#'                         
+#'   )
+#'   json_function <- fromJSON('./data/tools_config.json',simplifyVector = F) 
+#'   
+#'   json_data <- list(model="openai/gpt-3.5-turbo",
+#'                     messages = json_contents,
+#'                     functions= json_function,
+#'                     function_call='auto'
+#'                     #generationConfig = json_generationConfig
+#'   )
+#'   # setup the request message
+#'   request <- 
+#'     set_llm_conn() |>
+#'     req_body_json(data=json_data,
+#'                   type = "application/json") |>
+#'     req_error(is_error = \(resp) FALSE) 
+#'   
+#'   # get response while handling the exception 
+#'   response <- try(  
+#'     request |>
+#'       req_perform() )
+#'   
+#'   if('try-error' %in% class(response)){
+#'     response_message <- 'connection failed! pls check network' 
+#'   } else {
+#'     response_message <- 
+#'       response |> 
+#'       resp_body_json()|> 
+#'       pluck('choices',1) # R list index from 1
+#'       # note: in R language, the index is come from 1 instead of 0. In python, it is from 0
+#'   }
+#' 
+#'   result <- switch(response_message$finish_reason,
+#'                    stop=response_message|>
+#'                      pluck('message','content'),
+#'                    function_call=response_message|>
+#'                      pluck('message','function_call','arguments'),
+#'                    response_message|>
+#'                      pluck('message','content')
+#'                    )
+#'   
+#'   return(result)
+#'   
+#' }
+#' 
 
 
 #' @export
