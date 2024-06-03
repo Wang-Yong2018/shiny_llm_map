@@ -1,4 +1,4 @@
-box::use(httr2[request, req_perform,
+box::use(httr2[request, req_perform,last_response,
                resp_status,req_retry,req_error,req_timeout, req_dry_run,
                req_body_json, req_user_agent,req_headers,
                req_url_query, req_url_path_append,
@@ -32,7 +32,7 @@ req_perform_quick <- memoise(req_perform,cache = cache_dir)
 
 set_llm_conn <- function(
     url = "https://openrouter.ai/api/v1/chat/completions",
-    timeout_seconds=3
+    timeout_seconds=5
     ) {
   api_key = Sys.getenv('OPENROUTER_API_KEY') 
   
@@ -50,10 +50,7 @@ set_llm_conn <- function(
 
 get_select_model_name <- function(model_id) {
   select_model= switch(model_id,
-                       gpt =   "openai/gpt-3.5-turbo", 
-                       gpt3 =   "openai/gpt-3.5-turbo", 
                        gpt35 = "openai/gpt-3.5-turbo", 
-                       gpt4 = "openai/gpt-4o",
                        gpt4o = "openai/gpt-4o",
                        # gpt4v = "openai/gpt-4-vision-preview",
                        gemini = "google/gemini-pro-1.5",
@@ -61,8 +58,8 @@ get_select_model_name <- function(model_id) {
                        claude3s = 'anthropic/claude-3-sonnet:beta',
                        mixtral = 'mistralai/mixtral-8x7b-instruct',
                        deepseekv2 = 'deepseek/deepseek-chat',
-                       "openai/gpt-3.5-turbo"
-                       
+                       phi="microsoft/phi-3-medium-128k-instruct:free",
+                      "microsoft/phi-3-medium-128k-instruct:free" 
                        )
   return(select_model)
 }
@@ -124,7 +121,7 @@ get_json_chat_data <- function(user_input, select_model, history=NULL){
   json_data <- list(model=select_model,
                     messages = json_contents,
                     seed=global_seed,
-                    max_tokens=300,
+                    max_tokens=4000,
                     temperature=1#,
                     #top_k = 0.1
                     #generationConfig = json_generationConfig
@@ -151,7 +148,7 @@ get_json_img <- function(user_input, img_url, select_model,image_type='file'){
                                                               detail='auto'))
                                           ))
                         )
-  json_max_tokens = 300                                             
+  json_max_tokens = 4000                                             
   json_data <- list(model=select_model,
                     messages = json_contents,
                     max_tokens = json_max_tokens
@@ -220,7 +217,8 @@ get_llm_result <- function(prompt='你好，你是谁',
                            model_id='llama',
                            llm_type='chat',
                            history=NULL,
-                           funcs_json=NULL){
+                           funcs_json=NULL,
+                           timeout_seconds=10){
   
 
   post_body <- get_llm_post_data(prompt=prompt,history=history, 
@@ -228,19 +226,25 @@ get_llm_result <- function(prompt='你好，你是谁',
                                  img_url=img_url,funcs_json = funcs_json)
   #log_info(post_body)
   request <- 
-    set_llm_conn() |>
+    set_llm_conn(timeout_seconds = timeout_seconds) |>
     req_body_json(data=post_body,
                   type = "application/json") 
   
   # get response while handling the exception 
-  response <- try(  
-    request |>
-     req_perform() )
+  response <- 
+    try( request 
+         |> req_perform()
+    )
   
   if('try-error' %in% class(response)){
-    response
-    response_message <- str_glue('ERROR: large language model({model_id}) connection failed!') 
-    log_error(paste0('get_llm_result failed, the reason is: ==?',response ))
+    error_message <- response |> errorCondition()
+    response_message <-list( model =get_select_model_name(model_id),
+                             choices=list(list(message = list(
+                                                 role = 'error',
+                                                 content = 'error_message$message'),
+                                               finish_reason='timeout')
+                             ))
+      log_error(paste0('get_llm_result failed, the reason is: ==?',error_message))
   } else {
     response_message <- 
       response |> 
@@ -294,58 +298,6 @@ llm_chat <- function( user_input, model_id='llama', history=NULL){
 
 
 
-#' #' @export
-#' llm_func <- function( prompt, model_id='llama', history=NULL){
-#' 
-#'   # prepare the data
-#'   json_contents <- list(list(role = 'user',content=prompt)
-#'                         # this is a list of messages
-#'                         
-#'   )
-#'   json_function <- fromJSON('./data/tools_config.json',simplifyVector = F) 
-#'   
-#'   json_data <- list(model="openai/gpt-3.5-turbo",
-#'                     messages = json_contents,
-#'                     functions= json_function,
-#'                     function_call='auto'
-#'                     #generationConfig = json_generationConfig
-#'   )
-#'   # setup the request message
-#'   request <- 
-#'     set_llm_conn() |>
-#'     req_body_json(data=json_data,
-#'                   type = "application/json") |>
-#'     req_error(is_error = \(resp) FALSE) 
-#'   
-#'   # get response while handling the exception 
-#'   response <- try(  
-#'     request |>
-#'       req_perform() )
-#'   
-#'   if('try-error' %in% class(response)){
-#'     response_message <- 'connection failed! pls check network' 
-#'   } else {
-#'     response_message <- 
-#'       response |> 
-#'       resp_body_json()|> 
-#'       pluck('choices',1) # R list index from 1
-#'       # note: in R language, the index is come from 1 instead of 0. In python, it is from 0
-#'   }
-#' 
-#'   result <- switch(response_message$finish_reason,
-#'                    stop=response_message|>
-#'                      pluck('message','content'),
-#'                    function_call=response_message|>
-#'                      pluck('message','function_call','arguments'),
-#'                    response_message|>
-#'                      pluck('message','content')
-#'                    )
-#'   
-#'   return(result)
-#'   
-#' }
-#' 
-
 
 #' @export
 get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
@@ -358,12 +310,13 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
   ai_result <- switch(finish_reason,
                       # chat_type
                       stop = list(role=ai_message$role, content=ai_message$content),
+                      error = list(role=ai_message$role,content=ai_message$content),
                       function_call = list(role=ai_message$role, content=ai_message$function_call),
                       #sql_query=list(role=ai_message$role, content=list(name='sql_query',arguments=ai_message$content)),
-                      list(role=ai_message$role, content=ai_message$content)
+                      list(role=ai_message$role, content=paste0('--# ',finish_reason,'   ',ai_message$content))
                       )
   log_debug(ai_result)
-  if(ai_type %in% c('sql_query','dot','sql')){
+  if(ai_type %in% c('sql_query','dot','sql') & finish_reason %in% c('stop','function_call')){
     
     code <- ai_message$content
     if(grepl('ERROR', code)) {
