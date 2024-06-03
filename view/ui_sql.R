@@ -10,7 +10,8 @@ box::use(shiny[NS,
                actionButton,
                reactiveValues, observe, observeEvent,reactive,
                fileInput,imageOutput,
-               uiOutput, renderUI ])
+               uiOutput, renderUI,
+               bindCache])
 box::use(knitr[kable],
          markdown[mark_html],
          DiagrammeR[grViz, renderGrViz, grVizOutput],
@@ -99,7 +100,7 @@ server <- function(id) {
     get_reactive_sql_prompt <- reactive({
       sql_query <-  get_sql_prompt(input$db_id, input$prompt)
       
-    })
+    })|>bindCache(input$db_id, input$prompt)
     
     get_reactive_evaluation <- reactive({
       db_content <- get_db_schema_text(input$db_id)
@@ -114,7 +115,7 @@ server <- function(id) {
       print(ai_evaluation)
       ai_evaluation|>
         pluck('content')|>markdown()
-    })
+    })|>bindCache(input$db_id,input$model_id)
     
     
     
@@ -141,7 +142,7 @@ server <- function(id) {
           result <- sql_message
       }
       return(result)
-    })
+    })|>bindCache(input$db_id,input$model_id)
     
     observeEvent(input$db_id, {
       new_prompt <-
@@ -159,7 +160,7 @@ server <- function(id) {
                           cyd = './data/cyd.gv')
     
       grViz(file_name ,width = "100%", height = "100%")
-    })
+    })|>bindCache(input$db_id)
 
 
     observeEvent(input$goButton, {

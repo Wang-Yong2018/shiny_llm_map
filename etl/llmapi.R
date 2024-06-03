@@ -32,7 +32,7 @@ req_perform_quick <- memoise(req_perform,cache = cache_dir)
 
 set_llm_conn <- function(
     url = "https://openrouter.ai/api/v1/chat/completions",
-    timeout_seconds=8
+    timeout_seconds=20
     ) {
   api_key = Sys.getenv('OPENROUTER_API_KEY') 
   
@@ -40,8 +40,8 @@ set_llm_conn <- function(
     req_timeout(timeout_seconds)|>
     req_headers(
       Authorization=paste0('Bearer ',api_key) )|>
-    req_retry(  max_tries = 2,
-                backoff = ~1) |>
+    # req_retry(  max_tries = 2,
+    #             backoff = ~1) |>
     req_user_agent('shiny_ai')
   
   return(req)
@@ -107,7 +107,7 @@ get_json_data <- function(user_input,select_model){
   return(json_data)
 }
 
-get_json_chat_data <- function(user_input, select_model, history=NULL){
+get_json_chat_data <- function(user_input, select_model, history=NULL,max_tokens=500){
   # this function is used for short memory conversation.
   # The ai could remember what user said and conversation based on history topic'
   
@@ -122,7 +122,7 @@ get_json_chat_data <- function(user_input, select_model, history=NULL){
   json_data <- list(model=select_model,
                     messages = json_contents,
                     seed=global_seed,
-                    #max_tokens=4000,
+                    max_tokens=max_tokens,
                     temperature=1#,
                     #top_k = 0.1
                     #generationConfig = json_generationConfig
@@ -131,7 +131,7 @@ get_json_chat_data <- function(user_input, select_model, history=NULL){
   return(json_data)
 }
 
-get_json_img <- function(user_input, img_url, select_model,image_type='file'){
+get_json_img <- function(user_input, img_url, select_model,image_type='file',max_tokens=500){
 
   # # prepare the configure
   # json_generationConfig = list( temperature = 0.5,
@@ -149,10 +149,9 @@ get_json_img <- function(user_input, img_url, select_model,image_type='file'){
                                                               detail='auto'))
                                           ))
                         )
-  json_max_tokens = 0
   json_data <- list(model=select_model,
                     messages = json_contents,
-                    max_tokens = json_max_tokens
+                    max_tokens = max_tokens
                     #generationConfig = json_generationConfig
   )
   return(json_data)
@@ -199,10 +198,10 @@ get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_i
   
   # select the post_body 
   post_body <- switch(llm_type,
-                      chat=get_json_chat_data(user_input=prompt,select_model=select_model,history=history),
+                      chat=get_json_chat_data(user_input=prompt,select_model=select_model,history=history,max_tokens=500),
                       answer=get_json_data(user_input=prompt,select_model=select_model),
-                      img_url=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model,image_type='url'),
-                      img=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model, image_type='file'),
+                      img_url=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model,image_type='url',max_tokens=500),
+                      img=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model, image_type='file',max_tokens=500),
                       #sql=get_json_sql(user_input=prompt,select_model=select_model,history=history),
                       #func=get_json_func(user_input=prompt,select_model=select_model,history=history),
                       agent=get_json_agent(user_input=prompt,select_model=select_model,funcs_json=funcs_json),
