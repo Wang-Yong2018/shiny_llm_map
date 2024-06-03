@@ -18,7 +18,7 @@ log_appender(appender_file(log_file,max_line=1000,max_files = 3L))
 #Sys.setlocale(category = "LC_ALL",locale = "English_United States")
 #Sys.setlocale(category = "LC_ALL",locale = "Chinese (Simplified)_China.utf8")
 
-app_language = 'en'
+app_language = 'cn'
 
 box::use(shiny.i18n[Translator])
 

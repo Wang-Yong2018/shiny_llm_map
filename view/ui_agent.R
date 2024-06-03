@@ -6,14 +6,14 @@ box::use(shiny[NS,
                renderImage,
                tags,
                titlePanel,
-               uiOutput,renderPrint,renderText, markdown,
+               renderPrint,renderText, markdown,
                textInput, textOutput,verbatimTextOutput,
                selectInput,
                textAreaInput,
                actionButton,
                hr,
-               reactiveValues, observe, observeEvent,reactive
-               ])
+               reactiveValues, observe, observeEvent,reactive,
+               uiOutput, renderUI ])
 box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
 box::use(../etl/chat_api[db_connect, 
@@ -65,7 +65,7 @@ ui <- function(id, label='agent_llm'){
        column(width=1),
        column(width=6,
               style = 'border: solid 0.1px grey; min-height: 100px;',  
-              verbatimTextOutput(
+              uiOutput(
                          #label = 'AI feedback',
                          outputId = ns('ai_output')#,value = 'AI feedback'
               )
@@ -162,8 +162,9 @@ server <- function(id) {
                        funcs_json = func_json)|>
         get_ai_result(ai_type='agent') 
       
-      output$ai_output<- renderPrint({
-        ai_message|> pluck('content')
+      output$ai_output<- renderUI({
+        ai_message|> 
+          pluck('content')
         
       })
       
@@ -171,7 +172,10 @@ server <- function(id) {
       output$txt_json_feedback <- renderPrint({
         func_result <- 'no support! only chatgpt interface compatible'
         if (grepl('gpt',input$model_id)){
-          func_result <-  get_agent_result(ai_message)
+          func_result <-  get_agent_result(ai_message)|>
+            gsub(pattern='\n',
+                 replacement='<br />')|>
+            markdown()
           log_debug(paste0('the output of func_result is ===>', func_result))
         }
         

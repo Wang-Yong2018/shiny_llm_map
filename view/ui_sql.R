@@ -27,13 +27,15 @@ box::use(../etl/chat_api[db_connect,
                          read_messages, send_message, db_clear])
 
 box::use(../etl/img_tools[resize_image])
-box::use(../etl/agent_sql[get_sql_prompt,get_gv_string])
+box::use(../etl/agent_sql[get_sql_prompt,get_gv_string,get_db_schema_text])
 # language config
 box::use(../global_constant[app_name,app_language, i18n,
                            img_vision_prompt, 
                            model_id_list,vision_model_list,sql_model_id_list,
                            db_id_list])
 box::use(../etl/agent_router[get_agent_result])
+box::use(jsonlite[fromJSON, toJSON],
+         stringr[str_glue])
 
 # box::use(shiny.i18n[Translator])
 # 
@@ -69,17 +71,18 @@ ui <- function(id, label='sql_llm'){
                                  label= i18n$translate('database list'),
                                  choices=db_id_list,
                                  multiple=FALSE,
-                                 selected=)
+                                 selected=NULL)
       )),
     fluidRow(
       tabsetPanel( 
-        tabPanel(i18n$translate('sql_result'),   uiOutput(ns('sql_result')) ),
-        tabPanel(i18n$translate('system_prompt'),   textAreaInput(ns('system_prompt'),label=' system prompt',
+        tabPanel(i18n$translate('Evaluate'),   uiOutput(ns('evaluation')) ),
+        tabPanel(i18n$translate('Data '),   uiOutput(ns('sql_result')) ),
+        tabPanel(i18n$translate('Context'),   textAreaInput(ns('system_prompt'),label=' system prompt',
                                                                   placeholder = 'revise the initial system prompt here',
                                                                    rows=50 )) ,
-        tabPanel(i18n$translate('graph_erd'),   grVizOutput(ns('graph_erd'))) ,
-        tabPanel(i18n$translate('AI generated SQL'),   uiOutput(ns('sql_query'))) ,
-        selected = i18n$translate('sql_result'),
+        tabPanel(i18n$translate('Graph_erd'),   grVizOutput(ns('graph_erd'))) ,
+        tabPanel(i18n$translate('AI_sql'),   uiOutput(ns('sql_query'))) ,
+        selected = i18n$translate('Context'),
  
       )
     )
@@ -96,8 +99,25 @@ server <- function(id) {
     get_reactive_sql_prompt <- reactive({
       sql_query <-  get_sql_prompt(input$db_id, input$prompt)
       
-     
     })
+    
+    get_reactive_evaluation <- reactive({
+      db_content <- get_db_schema_text(input$db_id)
+      evaluation_prompt_template  <- i18n$translate(
+        'As business analysis, pls analyze the following database schema, and evaluate the business value and opportunities')
+       
+      evaluation_prompt = paste0(evaluation_prompt_template,'\n',db_content)
+      ai_evaluation <- get_llm_result(evaluation_prompt, model_id=input$model_id)|>
+        get_ai_result()
+      
+      log_info(paste0('ai data_base evaluation result ai_evaluation', ai_evaluation))
+      print(ai_evaluation)
+      ai_evaluation|>
+        pluck('content')|>markdown()
+    })
+    
+    
+    
     # TODO split get sql message in to get_ai_messag / get_sql_message
     get_sql_message <- reactive({
       
@@ -128,6 +148,7 @@ server <- function(id) {
         get_reactive_sql_prompt() 
       
       updateTextAreaInput(session,'system_prompt', value = new_prompt)
+      output$evaluation <- renderUI({get_reactive_evaluation()})
     })
     
     
