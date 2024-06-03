@@ -54,7 +54,7 @@ ui <- function(id, label='sql_llm'){
              textAreaInput(
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
-               value = i18n$translate('Query the top 3 total spent buyer name, country and total spend, and spend times.'),
+               value = i18n$translate('Query the top 3 total spent buyer name country and total spend and spend times.'),
                placeholder = i18n$translate('Enter Prompts Here'),
                width='100%',
                rows=8
@@ -76,7 +76,7 @@ ui <- function(id, label='sql_llm'){
     fluidRow(
       tabsetPanel( 
         tabPanel(i18n$translate('Evaluate'),   uiOutput(ns('evaluation')) ),
-        tabPanel(i18n$translate('Data '),   uiOutput(ns('sql_result')) ),
+        tabPanel(i18n$translate('Data'),   uiOutput(ns('sql_result')) ),
         tabPanel(i18n$translate('Context'),   textAreaInput(ns('system_prompt'),label=' system prompt',
                                                                   placeholder = 'revise the initial system prompt here',
                                                                    rows=50 )) ,
@@ -104,10 +104,10 @@ server <- function(id) {
     get_reactive_evaluation <- reactive({
       db_content <- get_db_schema_text(input$db_id)
       evaluation_prompt_template  <- i18n$translate(
-        'As business analysis, pls analyze the following database schema, and evaluate the business value and opportunities')
+        'As business analysis pls analyze the following database schema and evaluate the business value and opportunities')
        
       evaluation_prompt = paste0(evaluation_prompt_template,'\n',db_content)
-      ai_evaluation <- get_llm_result(evaluation_prompt, model_id=input$model_id)|>
+      ai_evaluation <- get_llm_result(prompt=evaluation_prompt, model_id=input$model_id)|>
         get_ai_result()
       
       log_info(paste0('ai data_base evaluation result ai_evaluation', ai_evaluation))

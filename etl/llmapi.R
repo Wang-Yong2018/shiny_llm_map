@@ -32,7 +32,7 @@ req_perform_quick <- memoise(req_perform,cache = cache_dir)
 
 set_llm_conn <- function(
     url = "https://openrouter.ai/api/v1/chat/completions",
-    timeout_seconds=5
+    timeout_seconds=8
     ) {
   api_key = Sys.getenv('OPENROUTER_API_KEY') 
   
@@ -40,7 +40,7 @@ set_llm_conn <- function(
     req_timeout(timeout_seconds)|>
     req_headers(
       Authorization=paste0('Bearer ',api_key) )|>
-    req_retry(  max_tries = 3,
+    req_retry(  max_tries = 2,
                 backoff = ~1) |>
     req_user_agent('shiny_ai')
   
@@ -78,7 +78,7 @@ get_chat_history <- function(message, role='user', last_history=NULL){
   # If last_history is NULL, initialize the chat history
   if (is.null(last_history)) {
     last_history <- list(list(role='system',
-                              content =  i18n$translate("")))
+                              content =  i18n$translate("You are a helpful AI assitan")))
     
   } 
   new_history <- last_history
@@ -112,8 +112,9 @@ get_json_chat_data <- function(user_input, select_model, history=NULL){
   # The ai could remember what user said and conversation based on history topic'
   
   # # prepare the configure
-  json_generationConfig = list( temperature = 0.5,
-                               maxOutputTokens = 1024)
+  json_generationConfig = list( temperature = 0.5# ,
+                              # maxOutputTokens = 1024
+                               )
   # prepare the data
   # user_message <- list(role = 'user',content=user_input)
   
@@ -121,7 +122,7 @@ get_json_chat_data <- function(user_input, select_model, history=NULL){
   json_data <- list(model=select_model,
                     messages = json_contents,
                     seed=global_seed,
-                    max_tokens=4000,
+                    #max_tokens=4000,
                     temperature=1#,
                     #top_k = 0.1
                     #generationConfig = json_generationConfig
@@ -148,7 +149,7 @@ get_json_img <- function(user_input, img_url, select_model,image_type='file'){
                                                               detail='auto'))
                                           ))
                         )
-  json_max_tokens = 4000                                             
+  json_max_tokens = 0
   json_data <- list(model=select_model,
                     messages = json_contents,
                     max_tokens = json_max_tokens
@@ -231,10 +232,11 @@ get_llm_result <- function(prompt='你好，你是谁',
                   type = "application/json") 
   
   # get response while handling the exception 
-  response <- 
-    try( request 
-         |> req_perform()
-    )
+  response <- request |> req_perform(verbosity=3)
+  # response <- 
+  #   try( request 
+  #        |> req_perform()
+  #   )
   
   if('try-error' %in% class(response)){
     error_message <- response |> errorCondition()
