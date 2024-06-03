@@ -32,7 +32,7 @@ app_name <- i18n$translate('ai_chatbox')
 # time series name
 ts_var_name <-'biz_date'
 # ts_var_name <-'rq' 
-model_id_list <- c('llama','gemini', 'gpt35','gpt4t', 'gpt4v','claude3s')
+model_id_list <- c('gpt35','gpt4o','gemini','llama','claude3s','mixtral','deepseekv2','phi')
 sql_model_id_list <- c('gpt35','gemini', 'claude3s','deepseekv2')
 
 db_id_list <-c('chinook','cyd')
@@ -41,7 +41,7 @@ db_chinook_url <- './data/chinook.db'
 # group key name
 site_var_name <- 'collection_node'
 # site_var_name <- 'site_name'
-vision_model_list <-c('gemini','gpt4v')
+vision_model_list <- model_id_list
 img_vision_prompt <- "As a image tag and classification expert, pls help to analyse the image. Provide follow output:\n1. main topic tag and elements list\n2. using markdown format\n"
 
 # the maximum sql query result row number  
