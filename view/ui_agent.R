@@ -14,6 +14,7 @@ box::use(shiny[NS,
                hr,
                reactiveValues, observe, observeEvent,reactive,
                uiOutput, renderUI ])
+
 box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
 box::use(../etl/chat_api[db_connect, 
@@ -107,10 +108,7 @@ ui <- function(id, label='agent_llm'){
        ),
        column(width=6,
               style = 'border: solid 0.1px grey; min-height: 100px;',  
-              uiOutput(
-                outputId = ns('txt_json_feedback'),
-                #'txt_json_feedback'#, value = 'hi, this for show the json parameter from LLMAI'
-              )
+              withSpinner( uiOutput( outputId = ns('txt_json_feedback') ) )
        )
        
      )

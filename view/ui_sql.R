@@ -12,6 +12,7 @@ box::use(shiny[NS,
                fileInput,imageOutput,
                uiOutput, renderUI,
                bindCache])
+box::use(shinycssloaders[withSpinner])
 box::use(knitr[kable],
          markdown[mark_html],
          DiagrammeR[grViz, renderGrViz, grVizOutput],
@@ -55,7 +56,7 @@ ui <- function(id, label='sql_llm'){
              textAreaInput(
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
-               value = i18n$translate('Query the top 3 total spent buyer name country and total spend and spend times.'),
+               value = i18n$translate(''),
                placeholder = i18n$translate('Enter Prompts Here'),
                width='100%',
                rows=8
@@ -76,13 +77,24 @@ ui <- function(id, label='sql_llm'){
       )),
     fluidRow(
       tabsetPanel( 
-        tabPanel(i18n$translate('Evaluate'),   uiOutput(ns('evaluation')) ),
-        tabPanel(i18n$translate('Data'),   uiOutput(ns('sql_result')) ),
-        tabPanel(i18n$translate('Context'),   textAreaInput(ns('system_prompt'),label=' system prompt',
-                                                                  placeholder = 'revise the initial system prompt here',
-                                                                   rows=50 )) ,
-        tabPanel(i18n$translate('Graph_erd'),   grVizOutput(ns('graph_erd'))) ,
-        tabPanel(i18n$translate('AI_sql'),   uiOutput(ns('sql_query'))) ,
+        tabPanel(i18n$translate('Evaluate'), 
+                 withSpinner(
+                 uiOutput(ns('evaluation')) )
+                 ),
+        tabPanel(i18n$translate('Data'),
+                 withSpinner(
+                 uiOutput(ns('sql_result')) )),
+        tabPanel(i18n$translate('Context'),   
+                 textAreaInput(ns('system_prompt'),
+                                            label=' system prompt',
+                                            placeholder = '',
+                                            rows=50 )),
+        tabPanel(i18n$translate('Graph_erd'),  
+                 withSpinner(
+                 grVizOutput(ns('graph_erd')))) ,
+        tabPanel(i18n$translate('AI_sql'),   
+                 withSpinner(
+                 uiOutput(ns('sql_query'))) ),
         selected = i18n$translate('Context'),
  
       )
@@ -99,7 +111,6 @@ server <- function(id) {
  
     get_reactive_sql_prompt <- reactive({
       sql_query <-  get_sql_prompt(input$db_id, input$prompt)
-      
     })
     
     get_reactive_evaluation <- reactive({
@@ -121,7 +132,6 @@ server <- function(id) {
     
     # TODO split get sql message in to get_ai_messag / get_sql_message
     get_sql_message <- reactive({
-      
       log_debug(paste0(' input is :',input$prompt))
       message <-  get_llm_result(prompt=get_reactive_sql_prompt(),
                                  model_id=input$model_id,
@@ -142,14 +152,12 @@ server <- function(id) {
           result <- sql_message
       }
       return(result)
-    })
+    })|>bindCache(input$db_id,input$model_id)
     
     observeEvent(input$db_id, {
-      new_prompt <-
-        get_reactive_sql_prompt() 
-      
-      updateTextAreaInput(session,'system_prompt', value = new_prompt)
+      new_prompt <- get_reactive_sql_prompt() 
       output$evaluation <- renderUI({get_reactive_evaluation()})
+      updateTextAreaInput(session,'system_prompt', value = new_prompt)
     })
     
     
@@ -157,7 +165,9 @@ server <- function(id) {
       
       file_name <- switch(input$db_id,
                           chinook = './data/chinook.gv',
-                          cyd = './data/cyd.gv')
+                          cyd = './data/cyd.gv',
+                          './data/chinook.gv')
+                        
     
       grViz(file_name ,width = "100%", height = "100%")
     })|>bindCache(input$db_id)

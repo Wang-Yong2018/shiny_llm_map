@@ -35,9 +35,14 @@ ts_var_name <-'biz_date'
 model_id_list <- c('gpt35','gpt4o','gemini','llama','claude3s','mixtral','deepseekv2','phi')
 sql_model_id_list <- c('gpt35','gemini', 'claude3s','deepseekv2')
 
-db_id_list <-c('chinook','cyd')
+db_id_list <-c('music','dvd_rental','academic')
 
 db_chinook_url <- './data/chinook.db'
+
+db_url_map <- list(music='./data/chinook.db',
+                   dvd_rental= './data/sakila_1.sqlite',
+                   academic = './data/academic.sqlite')
+
 # group key name
 site_var_name <- 'collection_node'
 # site_var_name <- 'site_name'
@@ -49,3 +54,4 @@ max_sql_query_rows <- 100
 
 sql_agent_config_file <- './data/sql_agent_prompt.txt'
 global_seed <- 42 
+timeout_seconds <- 60

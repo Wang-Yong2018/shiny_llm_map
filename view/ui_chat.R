@@ -14,6 +14,7 @@ box::use(shiny[NS,
                hr,
                reactiveValues, observe, observeEvent,reactive
                ])
+box::use(shinycssloaders[withSpinner])
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
                 log_threshold,
@@ -77,9 +78,8 @@ ui <- function(id, label='chat_llm'){
     #tags$div(uiOutput(ns("messages_fancy"))),
     #tags$div(textOutput(ns('messages_fany'))),
     fluidRow(
-     id = "chatbox-container",
-     uiOutput(ns("messages_fancy"))
-      
+      id = "chatbox-container",
+      withSpinner( uiOutput(ns("messages_fancy")) )
     ),
     fluidRow(
       column(width=7,

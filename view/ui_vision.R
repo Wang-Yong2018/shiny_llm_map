@@ -13,7 +13,8 @@ box::use(shiny[NS,
                hr,
                reactiveValues, observe, observeEvent,reactive,
                fileInput,imageOutput,
-])
+]) 
+box::use(shinycssloaders[withSpinner])
 box::use(logger[log_info, log_debug, log_error])
 box::use(purrrlyr[by_row],
          purrr[pluck])
@@ -75,7 +76,7 @@ ui <- function(id, label='vision_llm'){
       ),
       column(width=6,
              style = 'border: solid 1px black; min-height: 100px;',     
-             uiOutput(ns('text1')) )
+             withSpinner( uiOutput(ns('text1')) ) )
       
     ),
   )

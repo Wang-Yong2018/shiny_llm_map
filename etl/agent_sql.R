@@ -8,7 +8,7 @@ box::use(purrr[map,imap,pluck],
          stats[setNames])
 box::use(jsonlite[fromJSON, toJSON],
          stringr[str_glue])
-box::use(../global_constant[db_id_list, db_chinook_url,
+box::use(../global_constant[db_id_list, db_chinook_url,db_url_map,
                             max_sql_query_rows,sql_agent_config_file,
                             IS_DEBUG
                             ])
@@ -17,7 +17,9 @@ box::use(../etl/llmapi[get_llm_result, get_ai_result])
 get_db_conn <- function(db_id){
   
   conn <- switch(db_id,
-                 chinook =dbConnect(SQLite(), db_chinook_url),
+                 music=dbConnect(SQLite(), db_url_map[[db_id]]),
+                 academic=dbConnect(SQLite(), db_url_map[[db_id]]),
+                 dvd_rental=dbConnect(SQLite(), db_url_map[[db_id]]),
                  cyd = dbConnect(Postgres(),
                                  dbname = Sys.getenv('cyd_db_name'),
                                  host =  Sys.getenv('cyd_db_host'),

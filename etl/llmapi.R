@@ -1,4 +1,6 @@
-box::use(httr2[request, req_perform,last_response,
+box::use(httr2[request, req_cache, req_progress,
+               req_perform, req_perform_stream,
+               last_response,
                resp_status,req_retry,req_error,req_timeout, req_dry_run,
                req_body_json, req_user_agent,req_headers,
                req_url_query, req_url_path_append,
@@ -16,23 +18,18 @@ box::use(../etl/agent_sql[get_db_schema])
 box::use(../global_constant[app_name,app_language, 
                            img_vision_prompt, 
                            model_id_list,vision_model_list,
-                           global_seed,
+                           global_seed,timeout_seconds,
                            i18n])
 
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
                 INFO, DEBUG, WARN,ERROR,OFF])
 
-cache_dir <- cache_disk("./cache",max_age = 3600*24)
-
-# build llm connection
-req_perform_quick <- memoise(req_perform,cache = cache_dir)
-
-
+# cache_dir <- cache_disk("./cache",max_age = 3600*24)
 
 set_llm_conn <- function(
     url = "https://openrouter.ai/api/v1/chat/completions",
-    timeout_seconds=20
+    timeout_seconds=30
     ) {
   api_key = Sys.getenv('OPENROUTER_API_KEY') 
   
@@ -40,8 +37,10 @@ set_llm_conn <- function(
     req_timeout(timeout_seconds)|>
     req_headers(
       Authorization=paste0('Bearer ',api_key) )|>
-    # req_retry(  max_tries = 2,
-    #             backoff = ~1) |>
+    # req_cache(tempdir(), debug = TRUE) |>
+    req_retry(  max_tries = 3,
+                backoff = ~1) |>
+    req_progress() |>
     req_user_agent('shiny_ai')
   
   return(req)
@@ -50,7 +49,7 @@ set_llm_conn <- function(
 
 get_select_model_name <- function(model_id) {
   select_model= switch(model_id,
-                       gpt35 = "openai/gpt-3.5-turbo", 
+                       gpt35 = "openai/gpt-3.5-turbo-0125", 
                        gpt4o = "openai/gpt-4o",
                        # gpt4v = "openai/gpt-4-vision-preview",
                        gemini = "google/gemini-pro-1.5",
@@ -192,16 +191,17 @@ get_json_agent <- function(user_input, select_model,funcs_json){
 
 
 #' @export
-get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_id='llama', img_url=NULL,funcs_json=NULL){
+get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_id='llama', img_url=NULL,funcs_json=NULL,
+                              max_tokens=1000){
   # select the model
   select_model <- get_select_model_name(model_id)
   
   # select the post_body 
   post_body <- switch(llm_type,
-                      chat=get_json_chat_data(user_input=prompt,select_model=select_model,history=history,max_tokens=500),
+                      chat=get_json_chat_data(user_input=prompt,select_model=select_model,history=history,max_tokens=max_tokens),
                       answer=get_json_data(user_input=prompt,select_model=select_model),
-                      img_url=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model,image_type='url',max_tokens=500),
-                      img=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model, image_type='file',max_tokens=500),
+                      img_url=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model,image_type='url',max_tokens=max_tokens),
+                      img=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model, image_type='file',max_tokens=max_tokens),
                       #sql=get_json_sql(user_input=prompt,select_model=select_model,history=history),
                       #func=get_json_func(user_input=prompt,select_model=select_model,history=history),
                       agent=get_json_agent(user_input=prompt,select_model=select_model,funcs_json=funcs_json),
@@ -224,35 +224,16 @@ get_llm_result <- function(prompt='你好，你是谁',
   post_body <- get_llm_post_data(prompt=prompt,history=history, 
                                  llm_type=llm_type,model_id=model_id, 
                                  img_url=img_url,funcs_json = funcs_json)
-  #log_info(post_body)
+  log_info(paste(' the llm post data is ===> ', post_body,sep='\n'))
   request <- 
     set_llm_conn(timeout_seconds = timeout_seconds) |>
     req_body_json(data=post_body,
                   type = "application/json") 
   
-  # get response while handling the exception 
-  response <- request |> req_perform(verbosity=3)
-  # response <- 
-  #   try( request 
-  #        |> req_perform()
-  #   )
+ 
+  response_message <-  get_stream_data(request) 
   
-  if('try-error' %in% class(response)){
-    error_message <- response |> errorCondition()
-    response_message <-list( model =get_select_model_name(model_id),
-                             choices=list(list(message = list(
-                                                 role = 'error',
-                                                 content = 'error_message$message'),
-                                               finish_reason='timeout')
-                             ))
-      log_error(paste0('get_llm_result failed, the reason is: ==?',error_message))
-  } else {
-    response_message <- 
-      response |> 
-      resp_body_json() 
-  }
-  log_info(paste(' the llm post data is ===> ', post_body,sep='\n'))
-  log_info(paste(' the llm response data is ===> ', response_message ,sep='\n'))
+  
   return(  response_message)
 }
 
@@ -308,13 +289,15 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
   log_info(paste0('the get_ai_result function ai_message is======>',ai_message))
   finish_reason <- ai_response |> pluck('choices',1,'finish_reason')
   
-  ai_result <- switch(finish_reason,
+  ai_result <- switch(tolower(finish_reason),
                       # chat_type
                       stop = list(role=ai_message$role, content=ai_message$content),
+                      chat.completion = list(role=ai_message$role, content=ai_message$content),
+                      end_turn = list(role=ai_message$role, content=ai_message$content),
                       error = list(role=ai_message$role,content=ai_message$content),
                       function_call = list(role=ai_message$role, content=ai_message$function_call),
                       #sql_query=list(role=ai_message$role, content=list(name='sql_query',arguments=ai_message$content)),
-                      list(role=ai_message$role, content=paste0('--# ',finish_reason,'   ',ai_message$content))
+                      list(role=ai_message$role, content=paste0(ai_message$content, '\n--##', i18n$translate('finish reason'),':',finish_reason))
                       )
   log_debug(ai_result)
   if(ai_type %in% c('sql_query','dot','sql') & finish_reason %in% c('stop','function_call')){
@@ -329,7 +312,7 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
                        content=list(name = 'sql_query',
                                     arguments= list(db_id =db_id,
                                                     sql_query=code,
-                                                    model_id=ai_model_name) ) 
+                                                    model_id=model_id) ) 
                        )
       
     }
@@ -340,4 +323,58 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
   
   log_debug(paste0('the ai message result is ====>', ai_result))
   return(ai_result)
+}
+
+get_stream_data<- function(req,timeout_seconds=20){
+  # Initialize an empty list to store the streamed data
+  streamed_data <- list()
+  
+  # Define a callback function to process each chunk of data
+  process_chunk <- function(chunk) {
+    # Convert the raw chunk to character
+    # Process the JSON data (assuming each chunk is a complete JSON object)
+    
+    log_debug("Got ", length(chunk), " bytes\n", sep = "")
+    text<-  rawToChar(x=chunk)
+    # Append the data to the external list
+    streamed_data <<- append(streamed_data, text)
+    
+    # Return TRUE to continue streaming
+    TRUE
+  }
+  
+  # After streaming request
+  response<-
+    try( 
+      req|>  req_perform_stream(process_chunk, 
+                                timeout_sec = timeout_seconds,
+                                buffer_kb = 2,
+                                round ='line'
+                                )
+    )
+  
+  if('try-error' %in% class(response)){
+    error_message <- response |> errorCondition()
+    response_message <-list( model =NULL,
+                             choices=list(list(message = list(
+                               role = 'error',
+                               content = error_message$message),
+                               finish_reason='timeout')
+                             ))
+    log_error(paste0('get_llm_result failed, the reason is: ==?',error_message))
+  } else {
+    log_info(streamed_data)
+    response_message <-
+      streamed_data |>
+      paste0(collapse = '') |>
+      fromJSON(txt=_,simplifyVector =FALSE )#|>
+      #pluck(1)
+    # response_message <- streamed_data |> pluck(1)
+    log_info(response_message)
+  }
+  
+  log_info(paste(' the llm response data is ===> ', response_message ,sep='\n')) 
+  # Access the streamed data
+  return(response_message)
+  
 }
