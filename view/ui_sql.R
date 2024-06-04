@@ -95,7 +95,7 @@ ui <- function(id, label='sql_llm'){
         tabPanel(i18n$translate('AI_sql'),   
                  withSpinner(
                  uiOutput(ns('sql_query'))) ),
-        selected = i18n$translate('Context'),
+        selected = i18n$translate('Evaluate'),
  
       )
     )
