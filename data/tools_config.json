@@ -24,42 +24,5 @@
                 "second_numeric"
             ]
         }
-    }, 
-    {
-        "name": "extract_student_info",
-        "chinese_name": "提取学生信息",
-        "description": "Get the student information from the body of the input text",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "name": {
-                    "type": "string",
-                    "description": "Name of the person"
-                },
-                "major": {
-                    "type": "string",
-                    "description": "Major subject."
-                },
-                "school": {
-                    "type": "string",
-                    "description": "The university name."
-                },
-                "grades": {
-                    "type": "integer",
-                    "description": "GPA of the student."
-                },
-                "club": {
-                    "type": "string",
-                    "description": "School club for extracurricular activities. "
-                }
-            },
-            "required": [
-                "name",
-                "major",
-                "school",
-                "grades",
-                "club"
-            ]
-        }
     }
 ]
