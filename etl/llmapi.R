@@ -24,12 +24,13 @@ box::use(../global_constant[app_name,app_language,
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error,
                 INFO, DEBUG, WARN,ERROR,OFF])
+TIMEOUT_SECONDS = 30
 
 # cache_dir <- cache_disk("./cache",max_age = 3600*24)
 
 set_llm_conn <- function(
     url = "https://openrouter.ai/api/v1/chat/completions",
-    timeout_seconds=30
+    timeout_seconds=TIMEOUT_SECONDS
     ) {
   api_key = Sys.getenv('OPENROUTER_API_KEY') 
   
@@ -218,7 +219,7 @@ get_llm_result <- function(prompt='你好，你是谁',
                            llm_type='chat',
                            history=NULL,
                            funcs_json=NULL,
-                           timeout_seconds=20){
+                           timeout_seconds=TIMEOUT_SECONDS){
   
 
   post_body <- get_llm_post_data(prompt=prompt,history=history, 
@@ -325,7 +326,7 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
   return(ai_result)
 }
 
-get_stream_data<- function(req,timeout_seconds=20){
+get_stream_data<- function(req,timeout_seconds=TIMEOUT_SECONDS){
   # Initialize an empty list to store the streamed data
   streamed_data <- list()
   
@@ -361,19 +362,18 @@ get_stream_data<- function(req,timeout_seconds=20){
                                content = error_message$message),
                                finish_reason='timeout')
                              ))
-    log_error(paste0('get_llm_result failed, the reason is: ==?',error_message))
+    log_error(paste0('get_stream_data failed, the reason is: ==',error_message))
   } else {
-    log_info(streamed_data)
+    log_debug(streamed_data)
     response_message <-
       streamed_data |>
       paste0(collapse = '') |>
       fromJSON(txt=_,simplifyVector =FALSE )#|>
       #pluck(1)
     # response_message <- streamed_data |> pluck(1)
-    log_info(response_message)
   }
   
-  log_info(paste(' the llm response data is ===> ', response_message ,sep='\n')) 
+  log_debug(paste('the response data is ===> ', response_message ,sep='\n')) 
   # Access the streamed data
   return(response_message)
   
