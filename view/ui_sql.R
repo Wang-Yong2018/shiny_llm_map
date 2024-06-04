@@ -100,7 +100,7 @@ server <- function(id) {
     get_reactive_sql_prompt <- reactive({
       sql_query <-  get_sql_prompt(input$db_id, input$prompt)
       
-    })|>bindCache(input$db_id, input$prompt)
+    })
     
     get_reactive_evaluation <- reactive({
       db_content <- get_db_schema_text(input$db_id)
@@ -142,7 +142,7 @@ server <- function(id) {
           result <- sql_message
       }
       return(result)
-    })|>bindCache(input$db_id,input$model_id)
+    })
     
     observeEvent(input$db_id, {
       new_prompt <-

@@ -218,7 +218,7 @@ get_llm_result <- function(prompt='你好，你是谁',
                            llm_type='chat',
                            history=NULL,
                            funcs_json=NULL,
-                           timeout_seconds=10){
+                           timeout_seconds=20){
   
 
   post_body <- get_llm_post_data(prompt=prompt,history=history, 

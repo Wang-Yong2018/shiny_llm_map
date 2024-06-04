@@ -37,7 +37,7 @@ Query the top 3 total spent buyer name country and total spend and spend times.,
 AI generated SQL, AI编写的SQL
 analyze the photo feedback the topic and main element list, 识别输入的图片 反馈 1. 图片主题；2. 图中主要元素
 As a image tag and classification expert pls help to analyse the image. Provide follow output:\n1. main topic tag and elements list\n2. using markdown format\n, 作为图像识别专家，请分析图像并提供如下结果：\n1. 图片主题和主要元素清单 \n2.使用markdown 格式输出
-As business analysis pls analyze the following database schema and evaluate the business value and opportunities, 作为一个商业分析师，请分析下面的数据库表和字段的定义，并概述这些数据有什么商业价值和机会
+As business analysis pls analyze the following database schema and evaluate the business value and opportunities, 作为一个商业分析师，请概述数据的商业价值和潜在机会。下面是数据表和字段的定义。输出格式为markdown 
 Context, 上下文
 AI_sql, SQL编写
 Graph_erd, 数图
