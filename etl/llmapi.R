@@ -356,14 +356,15 @@ get_stream_data<- function(req,timeout_seconds=TIMEOUT_SECONDS){
     )
   
   if('try-error' %in% class(response)){
-    error_message <- response |> resp_status_desc()
-    http_code <- response |> resp_status()
-    error_code <- paste0('HTTP ',http_code)
+    error_message <- response |> errorCondition()
+    #error_message <- response |> resp_status_desc()
+    #http_code <- response |> resp_status()
+    #error_code <- paste0('HTTP ',http_code)
     response_message <-list( model =NULL,
                              choices=list(list(message = list(
                                role = 'error',
-                               content = error_code),
-                               finish_reason=error_message)
+                               content = error_message),
+                               finish_reason='time out')
                              ))
     log_error(paste0('get_stream_data failed, the reason is: ==',error_message))
   } else {

@@ -18,7 +18,7 @@ log_appender(appender_file(log_file,max_line=1000,max_files = 3L))
 #Sys.setlocale(category = "LC_ALL",locale = "English_United States")
 #Sys.setlocale(category = "LC_ALL",locale = "Chinese (Simplified)_China.utf8")
 
-app_language = 'cn'
+app_language = 'en'
 
 box::use(shiny.i18n[Translator])
 
@@ -28,20 +28,21 @@ i18n$set_translation_language(app_language)
 
 IS_DEBUG <- FALSE
 # app level
-app_name <- i18n$translate('ai_chatbox')
+app_name <- i18n$translate('shiny_llm_player')
 # time series name
 ts_var_name <-'biz_date'
 # ts_var_name <-'rq' 
 model_id_list <- c('gpt35','gpt4o','gemini','llama','claude3s','mixtral','deepseekv2','phi')
 sql_model_id_list <- c('gpt35','gemini', 'claude3s','deepseekv2')
 
-db_id_list <-c('music','dvd_rental','academic')
+db_id_list <-c('music','dvd_rental','hospital')
 
 db_chinook_url <- './data/chinook.db'
 
 db_url_map <- list(music='./data/chinook.db',
                    dvd_rental= './data/sakila_1.sqlite',
-                   academic = './data/academic.sqlite')
+                   academic = './data/academic.sqlite',
+                   hospital = './data/hospital_1.sqlite')
 
 # group key name
 site_var_name <- 'collection_node'
