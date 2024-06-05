@@ -32,9 +32,12 @@ ui <- function(id,label='sidebar'){
   ns <- NS(id)
   tagList(
     sidebarMenu( id='sidebar',collapsed=TRUE,
+                 menuItem(i18n$translate('help'),icon=icon('compass'),startExpanded =T, 
+                          tabName = 'help', selected=TRUE),
+                 
                  menuItem(i18n$translate('Features'),icon=icon('dashboard'),startExpanded =T,
                           menuSubItem(i18n$translate("Multi_ASK"),
-                                      tabName = 'chat_llm',icon=icon('walkie-talkie'),selected=TRUE),
+                                      tabName = 'chat_llm',icon=icon('walkie-talkie')),
                           menuSubItem(i18n$translate("Analyze_IMG"),
                                       tabName = 'vision_llm',icon=icon('image')),
                           menuSubItem(i18n$translate("Probe_DB"),

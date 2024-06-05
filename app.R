@@ -19,7 +19,8 @@ box::use(
    ./view/ui_chat,
    ./view/ui_vision,
    ./view/ui_agent,
-   ./view/ui_sql
+   ./view/ui_sql,
+   ./view/ui_help
 #   ./view/ui_glimpse,
 #   ./view/ui_plot_xy,
 #   ./view/ui_intro,
@@ -43,12 +44,14 @@ server <- function(input, output) {
   ui_vision$server('vision_llm')
   ui_agent$server('agent_llm')
   ui_sql$server('sql_llm')
+  ui_help$server('help')
   # note: it must add each of module server code here .
   #TODO add a message notice for llm service down or credit use out
     
     output$mainPanelContent <- renderUI({
       switch(input$sidebar,
              #'chat_echo'=ui_echo$ui('chat_echo'),
+             'help'=ui_help$ui('help'),
              "chat_llm"= ui_chat$ui('chat_llm'), 
              "vision_llm"= ui_vision$ui('vision_llm'),#h2('image Under construction') ,
              "agent_llm"= ui_agent$ui('agent_llm') ,
