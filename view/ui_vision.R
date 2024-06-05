@@ -30,10 +30,6 @@ box::use(../etl/img_tools[resize_image])
 box::use(../global_constant[app_name,app_language, i18n,
                            img_vision_prompt, 
                            model_id_list,vision_model_list ])
-# box::use(shiny.i18n[Translator])
-# 
-# i18n<- Translator$new(translation_csvs_path = "./translation/")
-# i18n$set_translation_language(app_language)
 
 
 #' @export
@@ -100,22 +96,23 @@ server <- function(id) {
     
     observeEvent(input$goButton, {
       output$text1 <- renderText({
-        print("\n==========================")
-        print(paste0(' input is :',input$prompt))
+        log_debug("\n==========================")
+        log_debug(paste0(' input is :',input$prompt))
         message <-  get_llm_result(prompt=input$prompt,
                                    img_url=input$file$datapath,
                                    model_id=input$model_id,
                                    llm_type = 'img')
         
         if (is.null(message)){
-          message <- 'failed to detect!!!'
+          message <- '# failed to detect!!!'
+          fancy_vision_message = markdown(message) 
         }else{
-          print(message)
           ai_message <- get_ai_result(message,ai_type='img')   
           fancy_vision_message = markdown(ai_message$content)
         }
-        print("**************************")
-        print(paste0(' output is :',fancy_vision_message))
+        log_debug("**************************")
+        
+        log_debug(paste0(' output is :',fancy_vision_message))
         
         return(fancy_vision_message)
       })

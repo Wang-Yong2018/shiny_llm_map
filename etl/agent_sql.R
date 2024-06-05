@@ -18,14 +18,15 @@ get_db_conn <- function(db_id){
   
   conn <- switch(db_id,
                  music=dbConnect(SQLite(), db_url_map[[db_id]]),
-                 academic=dbConnect(SQLite(), db_url_map[[db_id]]),
+                 hispital=dbConnect(SQLite(), db_url_map[[db_id]]),
                  dvd_rental=dbConnect(SQLite(), db_url_map[[db_id]]),
                  cyd = dbConnect(Postgres(),
                                  dbname = Sys.getenv('cyd_db_name'),
                                  host =  Sys.getenv('cyd_db_host'),
                                  port =  Sys.getenv('cyd_db_port'),
                                  user =  Sys.getenv('cyd_db_user'),
-                                 password = Sys.getenv('cyd_db_password')))
+                                 password = Sys.getenv('cyd_db_password')),
+                 dbConnect(SQLite(), db_url_map[[db_id]]))
   return(conn)
 }
 

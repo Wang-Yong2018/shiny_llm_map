@@ -2,6 +2,7 @@ box::use(httr2[request, req_cache, req_progress,
                req_perform, req_perform_stream,
                last_response,
                resp_status,req_retry,req_error,req_timeout, req_dry_run,
+               resp_check_status,resp_is_error,
                req_body_json, req_user_agent,req_headers,
                req_url_query, req_url_path_append,
                resp_body_json],
@@ -225,7 +226,7 @@ get_llm_result <- function(prompt='你好，你是谁',
   post_body <- get_llm_post_data(prompt=prompt,history=history, 
                                  llm_type=llm_type,model_id=model_id, 
                                  img_url=img_url,funcs_json = funcs_json)
-  log_info(paste(' the llm post data is ===> ', post_body,sep='\n'))
+  log_debug(paste(' the llm post data is ===> ', post_body,sep='\n'))
   request <- 
     set_llm_conn(timeout_seconds = timeout_seconds) |>
     req_body_json(data=post_body,
@@ -355,24 +356,41 @@ get_stream_data<- function(req,timeout_seconds=TIMEOUT_SECONDS){
     )
   
   if('try-error' %in% class(response)){
-    error_message <- response |> errorCondition()
+    error_message <- response |> resp_status_desc()
+    http_code <- response |> resp_status()
+    error_code <- paste0('HTTP ',http_code)
     response_message <-list( model =NULL,
                              choices=list(list(message = list(
                                role = 'error',
-                               content = error_message$message),
-                               finish_reason='timeout')
+                               content = error_code),
+                               finish_reason=error_message)
                              ))
     log_error(paste0('get_stream_data failed, the reason is: ==',error_message))
   } else {
-    log_debug(streamed_data)
-    response_message <-
-      streamed_data |>
-      paste0(collapse = '') |>
-      fromJSON(txt=_,simplifyVector =FALSE )#|>
+    if(resp_is_error(response)){
+      error_message <- response|>httr2::resp_status_desc()
+      http_code <- response|>resp_status()
+      error_code <- paste('HTTP ',
+                          http_code,
+                          ':',
+                          error_message)
+      
+      response_message <-list( model =NULL,
+                               choices=list(list(message = list(
+                                 role = 'error',
+                                 content = error_code),
+                                 finish_reason=error_message)
+                               ))
+    }else{
+      log_debug(streamed_data)
+      response_message <-
+        streamed_data |>
+        paste0(collapse = '') |>
+        fromJSON(txt=_,simplifyVector =FALSE )#|>
       #pluck(1)
-    # response_message <- streamed_data |> pluck(1)
+      # response_message <- streamed_data |> pluck(1)
+    }
   }
-  
   log_debug(paste('the response data is ===> ', response_message ,sep='\n')) 
   # Access the streamed data
   return(response_message)

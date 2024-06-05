@@ -14,7 +14,7 @@ box::use(shiny[NS,
                hr,
                reactiveValues, observe, observeEvent,reactive,
                uiOutput, renderUI ])
-
+box::use(shinycssloaders[withSpinner])
 box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
 box::use(../etl/chat_api[db_connect, 

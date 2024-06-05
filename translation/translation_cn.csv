@@ -1,7 +1,12 @@
 en,cn
 AI_chatbox, AI对话工具
+
 navigate, 导航
-ai_chats, AI工具
+Multi_ASK, 多问 
+Probe_DB, 探数
+Analyze_IMG, 识图
+Play_agent, 代理
+Play_rag, 数化
 chat_echo, 留言板
 chat_llm, AI对话 
 agent_llm, AI代理
@@ -13,7 +18,6 @@ rag_llm, 资料洞察
 chat_voice, 智慧辨音
 chat_image, 智慧识图
 chat_mm, 智慧多模
-vision_llm, AI识图
 ask ai, AI回答
 Prompt, 提示词
 Choose file to upload, 上传文件

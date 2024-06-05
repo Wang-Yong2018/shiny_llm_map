@@ -32,22 +32,19 @@ ui <- function(id,label='sidebar'){
   ns <- NS(id)
   tagList(
     sidebarMenu( id='sidebar',collapsed=TRUE,
-                 
-                 menuItem(i18n$translate('navigate'),icon=icon('dashboard'),startExpanded =F
-                          #menuSubItem(i18n$translate("intro"), tabName='ds_intro',icon=icon('eye'),selected=TRUE),
-                          #menuSubItem(i18n$translate("chat_echo"), tabName = 'chat_echo',icon=icon('th'))
-                          
+                 menuItem(i18n$translate('Features'),icon=icon('dashboard'),startExpanded =T,
+                          menuSubItem(i18n$translate("Multi_ASK"),
+                                      tabName = 'chat_llm',icon=icon('walkie-talkie'),selected=TRUE),
+                          menuSubItem(i18n$translate("Analyze_IMG"),
+                                      tabName = 'vision_llm',icon=icon('image')),
+                          menuSubItem(i18n$translate("Probe_DB"),
+                                      tabName = 'sql_llm',icon=icon('database')),
+                          menuSubItem(i18n$translate("Play_agent"),
+                                      tabName = 'agent_llm',icon=icon('link')),
+                          menuSubItem(i18n$translate("Play_rag"),
+                                      tabName = 'rag_llm',icon=icon('file'))
                  ),
-                 menuItem(i18n$translate('ai_chats'),icon=icon('dashboard'),startExpanded =T,
-                          menuSubItem(i18n$translate("chat_llm"), tabName = 'chat_llm',icon=icon('google')),
-                          menuSubItem(i18n$translate("vision_llm"), tabName = 'vision_llm',icon=icon('image')),
-                          menuSubItem(i18n$translate("agent_llm"), tabName = 'agent_llm',icon=icon('bridge')),
-                          menuSubItem(i18n$translate("sql_llm"), tabName = 'sql_llm',icon=icon('database'),selected=TRUE),
-                          menuSubItem(i18n$translate("rag_llm"), tabName = 'rag_llm',icon=icon('file'))
-                          #menuSubItem(i18n$translate("chat_debate"), tabName = 'chat_debate',icon=icon('fire')),
-                          #menuSubItem(i18n$translate("chat_voice"), tabName = 'chat_voice',icon=icon('radio')),
-                          #menuSubItem(i18n$translate("chat_mm"), tabName = 'chat_mm',icon=icon('bridge'))
-                 )  
+                 menuItem(i18n$translate('Config'),icon=icon('tools'),startExpanded =F)
                  
     ))
 }
