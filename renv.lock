@@ -4,7 +4,7 @@
     "Repositories": [
       {
         "Name": "CRAN",
-        "URL": "https://mirrors.tuna.tsinghua.edu.cn/CRAN"
+        "URL": "https://mirrors.sjtug.sjtu.edu.cn/cran"
       }
     ]
   },
@@ -150,17 +150,6 @@
         "utils"
       ],
       "Hash": "5ea2700d21e038ace58269ecdbeb9ec0"
-    },
-    "RcppTOML": {
-      "Package": "RcppTOML",
-      "Version": "0.2.2",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R",
-        "Rcpp"
-      ],
-      "Hash": "c232938949fcd8126034419cc529333a"
     },
     "askpass": {
       "Package": "askpass",
@@ -516,26 +505,16 @@
       ],
       "Hash": "e0b3a53876554bd45879e596cdb10a52"
     },
-    "here": {
-      "Package": "here",
-      "Version": "1.0.1",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "rprojroot"
-      ],
-      "Hash": "24b224366f9c2e7534d2344d10d59211"
-    },
     "highr": {
       "Package": "highr",
-      "Version": "0.10",
+      "Version": "0.11",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
         "R",
         "xfun"
       ],
-      "Hash": "06230136b2d2b9ba5805e1963fa6e890"
+      "Hash": "d65ba49117ca223614f71b60d85b8ab7"
     },
     "hms": {
       "Package": "hms",
@@ -663,7 +642,7 @@
     },
     "knitr": {
       "Package": "knitr",
-      "Version": "1.46",
+      "Version": "1.47",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -675,7 +654,7 @@
         "xfun",
         "yaml"
       ],
-      "Hash": "6e008ab1d696a5283c79765fa7b56b47"
+      "Hash": "7c99b2d55584b982717fcc0950378612"
     },
     "labeling": {
       "Package": "labeling",
@@ -919,16 +898,6 @@
       "Repository": "CRAN",
       "Hash": "09eb987710984fc2905c7129c7d85e65"
     },
-    "png": {
-      "Package": "png",
-      "Version": "0.1-8",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "R"
-      ],
-      "Hash": "bd54ba8a0a5faded999a7aab6e46b374"
-    },
     "praise": {
       "Package": "praise",
       "Version": "1.0.0",
@@ -1080,28 +1049,6 @@
         "utils"
       ],
       "Hash": "397b7b2a265bc5a7a06852524dabae20"
-    },
-    "reticulate": {
-      "Package": "reticulate",
-      "Version": "1.37.0",
-      "Source": "Repository",
-      "Repository": "CRAN",
-      "Requirements": [
-        "Matrix",
-        "R",
-        "Rcpp",
-        "RcppTOML",
-        "graphics",
-        "here",
-        "jsonlite",
-        "methods",
-        "png",
-        "rappdirs",
-        "rlang",
-        "utils",
-        "withr"
-      ],
-      "Hash": "9465d3bc6ec44eeaa52527ac2cba4020"
     },
     "rlang": {
       "Package": "rlang",
