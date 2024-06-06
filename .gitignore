@@ -35,4 +35,4 @@ po/*~
 rsconnect/
 *.log
 llm_message.log
-renv
+
