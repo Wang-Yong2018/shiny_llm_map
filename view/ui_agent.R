@@ -32,16 +32,12 @@ box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(cachem[cache_mem])
 box::use(jsonlite[read_json, toJSON,fromJSON])
 history <- cache_mem()
-# box::use(shiny.i18n[Translator])
-# i18n<- Translator$new(translation_csvs_path = "./translation/")
-# i18n$set_translation_language(app_language)
-
 box::use(stats[runif])
 box::use(../etl/agent_router[get_agent_result])
 
 
 all_funcs_json <- read_json('./data/tools_config.json',simplifyVector = F)
-func_chinese_name <-   all_funcs_json|> map_chr(pluck('chinese_name'))
+func_name <-   all_funcs_json|> map_chr(pluck('name'))
 
 
 
@@ -61,7 +57,7 @@ ui <- function(id, label='agent_llm'){
        column(width= 5,
               #  style = 'border: solid 0.1px grey; min-height: 100px;',  
               textAreaInput(inputId = ns("prompt"), 
-                            label = "prompt_input:", rows = 2, cols = 30)
+                            label =  i18n$translate("prompt_input"), rows = 2, cols = 30)
        ),
        column(width=1),
        column(width=6,
@@ -74,7 +70,7 @@ ui <- function(id, label='agent_llm'){
      ),
      fluidRow(
        column( width=6,
-               actionButton( ns('goButton'), i18n$translate('ask ai')) 
+               actionButton( ns('goButton'), i18n$translate('ask ai'),style = "color: blue;") 
                )
      ),
      
@@ -83,16 +79,16 @@ ui <- function(id, label='agent_llm'){
          width = 2,
          selectInput(inputId =   ns('func_selector'),
            #'func_selector',
-           label = '代理清单',
-           choices = func_chinese_name,
-           selected= func_chinese_name[1]
+           label = i18n$translate('agent list'),
+           choices = func_name,
+           selected= func_name[1]
          )
        ),
        column(
          width = 2,
          selectInput(inputId =  ns('model_id'),
           # 'model_id',
-           label = '可用模型清单',
+           label =  i18n$translate('model list'),
            choices =model_id_list,
            selected = 'gpt35' )
        )
@@ -140,7 +136,7 @@ server <- function(id) {
     get_func_definition <- reactive({
       #print(input$func_selector)
       result <- all_funcs_json |> 
-        keep(function(x) pluck(x, 'chinese_name') == input$func_selector)
+        keep(function(x) pluck(x, 'name') == input$func_selector)
     })
     
     output$txt_json_config <-renderPrint({

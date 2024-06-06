@@ -91,15 +91,15 @@ ui <- function(id, label='chat_llm'){
                                  selected=model_id_list[1])),
       column(width=2,
              actionButton(ns("msg_button"),
-                          i18n$translate('Send'),
-             style="display:flex") )
+                          i18n$translate('ask ai'),
+             style="display:flex; color: blue;") )
       ),
     fluidRow(
       column(width=3,
              textInput(ns("msg_username"),  i18n$translate("User Name"), value =  i18n$translate("Stranger" ))
              ),
       column(width=2,
-             actionButton(ns("msg_clearchat"),  i18n$translate("Clear Chat"))
+             actionButton(ns("msg_clearchat"),  i18n$translate("Clear Chat"),style = "color: blue;")
              )
     )
 

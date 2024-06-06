@@ -3,12 +3,12 @@ box::use(DBI[dbListTables,dbListFields, dbConnect,dbDisconnect, dbSendQuery, dbF
          RSQLite[SQLite])
 box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
-box::use(dplyr[case_when])
+box::use(dplyr[case_when],dbplyr)
 box::use(purrr[map,imap,pluck],
          stats[setNames])
 box::use(jsonlite[fromJSON, toJSON],
          stringr[str_glue])
-box::use(../global_constant[db_id_list, db_chinook_url,db_url_map,
+box::use(../global_constant[db_id_list, db_chinook_url,db_url_map, MAX_TOKENS,
                             max_sql_query_rows,sql_agent_config_file,
                             IS_DEBUG
                             ])
@@ -182,7 +182,7 @@ get_sql_result <- function(arguments){
     arguments$sql_query |>
     extract_md_code()
   
-  log_debug(paste0('get_sql_query function:===>',sep='    '))
+  log_debug(paste0('get_sql_query function:===>',query, sep='    '))
   log_debug(paste0('db_id is ===> ',db_id, sep='    '))
   
   
@@ -207,7 +207,7 @@ get_sql_result <- function(arguments){
   # on.exit(dbDisconnect(conn))
   sql_message <- list(query = query, result=result,db_id=db_id,model_id=model_id)
   
-  log_info(paste('the sql result function result is sql_message(query, result)===>',sql_message))
+  #log_info(paste('the sql result function result is sql_message(query, result)===>',sql_message))
   
   return(sql_message) 
 }

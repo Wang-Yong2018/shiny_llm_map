@@ -28,13 +28,13 @@ box::use(../etl/llmapi[ get_llm_result, check_llm_connection,get_ai_result])
 box::use(../etl/chat_api[db_connect, 
                          read_messages, send_message, db_clear])
 
-box::use(../etl/img_tools[resize_image])
-box::use(../etl/agent_sql[get_sql_prompt,get_gv_string,get_db_schema_text])
 # language config
 box::use(../global_constant[app_name,app_language, i18n,
-                           img_vision_prompt, 
+                           img_vision_prompt,MAX_TOKENS, 
                            model_id_list,vision_model_list,sql_model_id_list,
                            db_id_list])
+box::use(../etl/img_tools[resize_image])
+box::use(../etl/agent_sql[get_sql_prompt,get_gv_string,get_db_schema_text])
 box::use(../etl/agent_router[get_agent_result])
 box::use(jsonlite[fromJSON, toJSON],
          stringr[str_glue])
@@ -57,13 +57,15 @@ ui <- function(id, label='sql_llm'){
                inputId = ns('prompt'),
                label = i18n$translate('Prompt'),
                value = i18n$translate(''),
-               placeholder = i18n$translate('Enter Prompts Here'),
+               placeholder = i18n$translate('Tell AI, you role and your question '),
                width='100%',
                rows=8
                )
       ),
       column(width=6,
-             actionButton(ns('goButton'), i18n$translate('Ask Agent')) ,
+             actionButton(ns('goButton'), 
+                          i18n$translate('Ask Agent'),
+                          style = "color: blue;") ,
              selectInput(ns('model_id'),
                                  label= i18n$translate('model list'),
                                  choices=sql_model_id_list,
@@ -120,10 +122,10 @@ server <- function(id) {
        
       evaluation_prompt = paste0(evaluation_prompt_template,'\n',db_content)
       ai_evaluation <- get_llm_result(prompt=evaluation_prompt, model_id=input$model_id)|>
-        get_ai_result()
+        get_ai_result(ai_type='chat')
       
-      log_info(paste0('ai data_base evaluation result ai_evaluation', ai_evaluation))
-      print(ai_evaluation)
+      log_debug(paste0('ai data_base evaluation result ai_evaluation', ai_evaluation))
+      log_debug(ai_evaluation)
       ai_evaluation|>
         pluck('content')|>markdown()
     })|>bindCache(input$db_id,input$model_id)
@@ -135,24 +137,28 @@ server <- function(id) {
       log_debug(paste0(' input is :',input$prompt))
       message <-  get_llm_result(prompt=get_reactive_sql_prompt(),
                                  model_id=input$model_id,
-                                 llm_type = 'chat')
+                                 llm_type = 'sql')
       
       result <- '' 
-      if (is.null(message)| grepl('ERROR',toJSON(message))){
-        result <- paste0('--', message) 
+      if (is.null(message)| grepl('ERROR|error',toJSON(message))){
+        print(result)
+        result <- 
+          paste0(
+            'You answer can not be answered. Pls \n 1. check the AI_SQL for more clue. \n2. revise your question.\n',
+            'The detail database error message is followed:\n',
+          '--', message) 
         
         
       }else{
-        print(message)
         sql_parameter <- list(db_id=input$db_id)
-        ai_sql_message <- get_ai_result(message,ai_type='sql_query',sql_parameter )   
-        
+        ai_sql_message <- get_ai_result(message,ai_type='sql_query',sql_parameter)   
+        print(ai_sql_message) 
         sql_message <- 
           get_agent_result(ai_sql_message)
           result <- sql_message
       }
       return(result)
-    })|>bindCache(input$db_id,input$model_id)
+    })|>bindCache(input$db_id,input$model_id,input$prompt)
     
     observeEvent(input$db_id, {
       new_prompt <- get_reactive_sql_prompt() 
@@ -178,7 +184,7 @@ server <- function(id) {
       #log_info(paste('the final sql_message (query, result) is ====>',sql_message))
     
       output$sql_query  <- renderText({ 
-        log_info(sql_message)
+        log_debug(sql_message)
         query_sql<- sql_message|>pluck('query') 
         query_model_id <- sql_message |> pluck('model_id')
         query_db_id <- sql_message |> pluck('db_id')
@@ -202,8 +208,12 @@ server <- function(id) {
         
         sql_result <- sql_message|>pluck('result')
         is_data.frame <- class(sql_result) |> grepl('data.frame',x=_) |> any()
-        if (is_data.frame == TRUE) {
-          renderDataTable(sql_result, options = list(pageLength = 20))
+        if (is_data.frame == TRUE ) {
+          if (nrow(sql_result)>0 ){
+              renderDataTable(sql_result, options = list(pageLength = 20))
+          } else{
+            renderText('No thing found, pls check the ai-sql and revise your question')
+          }
         } else {
           renderText(sql_result)
         }

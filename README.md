@@ -14,12 +14,12 @@
 
 [#5. Q&A](#question)  
 [#6. Citation](#citation)  
-[source code](https://github.com/Wang-Yong2018/shiny_llm_player)
+[source code](https://github.com/Wang-Yong2018/shiny_llm_map)
 
 ## 1. Purpose
 <a id="purpose"></a>
 
-Shiny LLM player is designed to provide a user-friendly interface for playing with multiple large language models easily, the core features are MAP. This is the [web demo]( https://r7prz5-yong-wang.shinyapps.io/shiny_llm_player/)
+Shiny LLM map is designed to provide a user-friendly interface for playing with multiple large language models easily, the core features are MAP. This is the [web demo]( http://r7prz5-yong-wang.shinyapps.io/shiny_llm_map/)
 
 |||
 |------------------------------------|------------------------------------|
@@ -27,7 +27,7 @@ Shiny LLM player is designed to provide a user-friendly interface for playing wi
 
 ## 2. Core Concept
 <a id="core_concept"></a>
-The core concept of Shiny llm player app is value driven which including -
+The core concept of Shiny llm map app is value driven which including -
 
 -   **Multi connection**, instead of connect to one model, user ask one or more models work for task via drop down list. Openrouter API service was choice as base connector service. It is not free, but a api connectors to provide the [best models & prices](https://openrouter.ai/models) for your prompts service.
 
@@ -44,7 +44,7 @@ Ask one question, all the selected models will response the answer based on thei
 
 |||
 |------------------------------------|------------------------------------|
-| <img src="images/clipboard-1336060026.png" width="480" height="auto"> | With multi ask feature, you just ask and select desired one., shiny LLM player will collect answer for you. <br/><br /> Besides, the cost of for heavy using large language model is becoming a concern now. If model give same quality answer, why not use low cost model for common question. The fashion and popular models will be responsible for hard question. |
+| <img src="images/clipboard-1336060026.png" width="480" height="auto"> | With multi ask feature, you just ask and select desired one., shiny LLM map will collect answer for you. <br/><br /> Besides, the cost of for heavy using large language model is becoming a concern now. If model give same quality answer, why not use low cost model for common question. The fashion and popular models will be responsible for hard question. |
 
 ### 3.2 Analyze Image
 <a id="analyze_image"></a>
@@ -69,19 +69,19 @@ by combined the database schema and statistic information
 | 3\. Get data instantly <br /><img src="images/clipboard-18537938.png" width="480" height="auto"> | the current patient appointment showed instantly.|
 |||
 | 4\. Inside work <br />||
-| \- APP make Prompt from user question and others <br /><img src="images/clipboard-669495036.png" width="480" height="auto"> | After received user question(natural language), shiny llm play convert it to prompt with database schema info |
+| \- APP make Prompt from user question and others <br /><img src="images/clipboard-669495036.png" width="480" height="auto"> | After received user question(natural language), shiny llm map convert it to prompt with database schema info |
 | \- LLM generate SQL based on sytem prompt <br /> <img src="images/clipboard-1179619434.png" width="480" height="auto"> | <br /> - LLM provide the sql query base on natural language question. <br /> - Shiny llm app use the sql query get local data and show it |
 | 5\. Openbox - Sample Dataset <br /> <img src="images/clipboard-3153122393.png" width="480" height="auto">                   | \- Popular database samples is open box ready. <br /> - Three medium size database extracted from spider NLP2SQL project and ready for demo purpose <br /><br /> - a. Music - the famous chinook datasets <br /> - b. Dvd Rental - the famous sakila dataset <br /> - c. Hospital - a hospital operation databse|
 
 ## 4. How to Use
 <a id="howto"></a>
 
-To use the shiny llm player, you has two choices:
+To use the shiny llm map , you has two choices:
 
 ### 4.1. Web demo  
 <a id="web_demo"></a>
 
-just open below link for fun, [web demo]( https://r7prz5-yong-wang.shinyapps.io/shiny_llm_player/)
+just open below link for fun, [web demo](http://r7prz5-yong-wang.shinyapps.io/shiny_llm_map)
 
 ### 4.2. Run App @rstudio 
 <a id="rstudio"></a>
@@ -91,7 +91,7 @@ if you are familiar with Rstudio, clone it as your new project and have fun.
 | step | note |
 |---| ----|
 |||
-| 1\. clone new project from github <br /> <img src="images/clipboard-1024058564.png" width="480" height="auto">) | the github url is : [shiny_llm_player](https://github.com/Wang-Yong2018/shiny_llm_player)                 |
+| 1\. clone new project from github <br /> <img src="images/clipboard-1024058564.png" width="480" height="auto">) | the github url is : [shiny_llm_map](https://github.com/Wang-Yong2018/shiny_llm_map)                 |
 | 2 Get OpenAPI key <img src="images/clipboard-3470272520.png" width="480" height="auto">                         | \- link: <https://openrouter.ai/keys> <br /> - There are free models but popular model charged per usage. |
 | 3\. fill .Renviron file with key <br /> <img src="images/clipboard-3817247199.png" width="480" height="auto">)  | write the api key in to .Renviron under project root folder |
 | 4\. Run it <br /><img src="images/clipboard-2052786117.png" width="480" height="auto">                          | Launch it by open app.R and click Run button|

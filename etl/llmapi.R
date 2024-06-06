@@ -17,7 +17,7 @@ box::use(rlang[abort,warn])
 box::use(base64enc[base64encode])
 box::use(../etl/agent_sql[get_db_schema])
 box::use(../global_constant[app_name,app_language, 
-                           img_vision_prompt, 
+                           img_vision_prompt, MAX_TOKENS,
                            model_id_list,vision_model_list,
                            global_seed,timeout_seconds,
                            i18n])
@@ -108,7 +108,7 @@ get_json_data <- function(user_input,select_model){
   return(json_data)
 }
 
-get_json_chat_data <- function(user_input, select_model, history=NULL,max_tokens=500){
+get_json_chat_data <- function(user_input, select_model, history=NULL,max_tokens=MAX_TOKENS){
   # this function is used for short memory conversation.
   # The ai could remember what user said and conversation based on history topic'
   
@@ -123,7 +123,7 @@ get_json_chat_data <- function(user_input, select_model, history=NULL,max_tokens
   json_data <- list(model=select_model,
                     messages = json_contents,
                     seed=global_seed,
-                    max_tokens=max_tokens,
+                    max_tokens=MAX_TOKENS,
                     temperature=1#,
                     #top_k = 0.1
                     #generationConfig = json_generationConfig
@@ -132,7 +132,7 @@ get_json_chat_data <- function(user_input, select_model, history=NULL,max_tokens
   return(json_data)
 }
 
-get_json_img <- function(user_input, img_url, select_model,image_type='file',max_tokens=500){
+get_json_img <- function(user_input, img_url, select_model,image_type='file',max_tokens=MAX_TOKEN){
 
   # # prepare the configure
   # json_generationConfig = list( temperature = 0.5,
@@ -194,17 +194,17 @@ get_json_agent <- function(user_input, select_model,funcs_json){
 
 #' @export
 get_llm_post_data <- function(prompt='hi', history=NULL, llm_type='chat',model_id='llama', img_url=NULL,funcs_json=NULL,
-                              max_tokens=1000){
+                              max_tokens=MAX_TOKENS){
   # select the model
   select_model <- get_select_model_name(model_id)
   
   # select the post_body 
   post_body <- switch(llm_type,
                       chat=get_json_chat_data(user_input=prompt,select_model=select_model,history=history,max_tokens=max_tokens),
+                      sql=get_json_chat_data(user_input=prompt,select_model=select_model,history=history),
                       answer=get_json_data(user_input=prompt,select_model=select_model),
                       img_url=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model,image_type='url',max_tokens=max_tokens),
                       img=get_json_img(user_input=prompt, img_url=img_url, select_model=select_model, image_type='file',max_tokens=max_tokens),
-                      #sql=get_json_sql(user_input=prompt,select_model=select_model,history=history),
                       #func=get_json_func(user_input=prompt,select_model=select_model,history=history),
                       agent=get_json_agent(user_input=prompt,select_model=select_model,funcs_json=funcs_json),
                       get_json_data(user_input=prompt,select_model=select_model)
@@ -235,7 +235,8 @@ get_llm_result <- function(prompt='你好，你是谁',
  
   response_message <-  get_stream_data(request) 
   
-  
+  log_debug(response_message)
+  # print(response_message)
   return(  response_message)
 }
 
@@ -288,8 +289,8 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
   
   ai_message <- ai_response |> pluck('choices',1,'message')
   ai_model_name <- ai_response|>pluck('model')
-  log_info(paste0('the get_ai_result function ai_message is======>',ai_message))
-  finish_reason <- ai_response |> pluck('choices',1,'finish_reason')
+  log_debug(paste0('the get_ai_result function ai_message is======>',ai_message))
+  finish_reason <- ai_response |> pluck('choices',1,'finish_reason')|>tolower()
   
   ai_result <- switch(tolower(finish_reason),
                       # chat_type
@@ -298,11 +299,13 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
                       end_turn = list(role=ai_message$role, content=ai_message$content),
                       error = list(role=ai_message$role,content=ai_message$content),
                       function_call = list(role=ai_message$role, content=ai_message$function_call),
+                      max_tokens = list(role=ai_message$role, 
+                                        content=paste0(ai_message$content, '\n--##', i18n$translate('finish reason'),':',finish_reason)),
                       #sql_query=list(role=ai_message$role, content=list(name='sql_query',arguments=ai_message$content)),
                       list(role=ai_message$role, content=paste0(ai_message$content, '\n--##', i18n$translate('finish reason'),':',finish_reason))
                       )
   log_debug(ai_result)
-  if(ai_type %in% c('sql_query','dot','sql') & finish_reason %in% c('stop','function_call')){
+  if(ai_type %in% c('sql_query','dot','sql') & finish_reason %in% c('stop','function_call','max_tokens')){
     
     code <- ai_message$content
     if(grepl('ERROR', code)) {
@@ -310,11 +313,14 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
     }
     db_id <- parameter$db_id
     model_id <- ai_model_name
+    generate_time <- ai_response$created|> as.POSIXct()|>as.character() 
+    
     ai_result <- list( role=ai_message$role,
                        content=list(name = 'sql_query',
                                     arguments= list(db_id =db_id,
                                                     sql_query=code,
-                                                    model_id=model_id) ) 
+                                                    model_id=model_id,
+                                                    generated_time = generate_time) ) 
                        )
       
     }
@@ -323,7 +329,7 @@ get_ai_result <- function(ai_response,ai_type='chat',parameter=NULL){
     #   content=list(name='sql_query',arguments=code))
 
   
-  log_debug(paste0('the ai message result is ====>', ai_result))
+  log_info(paste0('the ai message result is ====>', ai_result))
   return(ai_result)
 }
 
@@ -392,7 +398,7 @@ get_stream_data<- function(req,timeout_seconds=TIMEOUT_SECONDS){
       # response_message <- streamed_data |> pluck(1)
     }
   }
-  log_debug(paste('the response data is ===> ', response_message ,sep='\n')) 
+  log_info(paste('the response data is ===> ', response_message ,sep='\n')) 
   # Access the streamed data
   return(response_message)
   

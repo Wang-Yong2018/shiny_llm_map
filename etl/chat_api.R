@@ -1,9 +1,3 @@
-#library(dplyr)
-#library(dbplyr)
-#library(DBI)
-#library(RSQLite)
-#library(magrittr)
-
 box::use(dplyr[tibble, if_else,copy_to,tbl, collect])
 box::use(DBI[dbConnect,dbListTables])
 box::use(RSQLite[SQLite,dbAppendTable])

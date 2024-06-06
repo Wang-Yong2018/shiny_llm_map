@@ -62,7 +62,7 @@ ui <- function(id, label='agent_llm'){
                                  multiple=FALSE,
                                  selected='gemini')),
       column(width=6,
-             actionButton(ns('goButton'), i18n$translate('ask ai')) ),
+             actionButton(ns('goButton'), i18n$translate('ask ai'),style = "color: blue;") ),
    
     ) ,
     fluidRow(

@@ -2,15 +2,18 @@
 /* 1. Given the following database schema: */
 {sql_ddl}
 
-/* 2. Answer the following :
+/* 2. Answer user question followed :
 {user_question}
 
-/* 3. Follow below sql code standard
- - 3.1. Prefer to use common table expression.
- - 3.2. Only use the tables and fields defined in the database schema
- - 3.3. Generate single table query when possible.
- - 3.5. Only left join tables which have same field name and nor more than 3 tables join 
- - 3.6. Minimum explaination for code. If necessary, pls start when --- , ending with \n
- - 3.7. the DBMS is {dbms_name}. if DBMS is sqlite, pls only use SQL-92 standard.
- - 3.8. the sql code should be ending with a semicolon.
+/* 3. Follow below SQL code standard
+ - 3.1. To begin with, check if the question can be answered by SQL, return explanation about how to change question.
+ - 3.1.1 explanation should be comments with SQL single line comments format!!!
+ - 3.2. If the question could be answer by SQL, use following format:
+ - 3.2.1 Prefer to use common table expression.
+ - 3.2.2 Only use the tables and fields defined in the database schema
+ - 3.2.3 Generate single table query when possible.
+ - 3.2.4 Only left join tables which have same field name and nor more than 3 tables join 
+ - 3.2.5 If necessary,explaination code geneation  with SQL single line comments format
+ - 3.2.6 the DBMS is {dbms_name}. if DBMS is sqlite, pls only use SQL-92 standard.
+ - 3.2.7 the SQL code should be ending with a semicolon.
 */

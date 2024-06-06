@@ -73,17 +73,19 @@ ui <- function(id, label='chat_echo'){
              ) )),
       column(width=2,
              actionButton(ns("msg_button"),
-                          "发送",
+                          i18n$translate('ask ai'),
                           height="30px"),
-             style="display:flex"),
+             style="display:flex; color: blue;"),
       hr()
       ),
     fluidRow(
       column(width=3,
-             textInput(ns("msg_username"), "用户名:", value = "八卦之人" )
+             textInput(ns("msg_username"), i18n$translate('user name'), value = i18n$translate('stranger'))
              ),
       column(width=2,
-             actionButton(ns("msg_clearchat"), "清除对话")
+             actionButton(ns("msg_clearchat"),
+                          i18n$translate('clean chat'),
+                          style = "color: blue;")
              )
     )
 

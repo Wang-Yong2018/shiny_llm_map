@@ -7,6 +7,8 @@ Probe_DB, 探数
 Analyze_IMG, 识图
 Play_agent, 代理
 Play_rag, 数化
+agent list,代理清单
+
 chat_echo, 留言板
 chat_llm, AI对话 
 agent_llm, AI代理
