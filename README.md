@@ -13,12 +13,13 @@
 - [#4.3 rstudio console call](#console)  
 
 [#5. Q&A](#question)  
-[#6. Citation](#citation)
+[#6. Citation](#citation)  
+[source code](https://github.com/Wang-Yong2018/shiny_llm_player)
 
 ## 1. Purpose
 <a id="purpose"></a>
 
-Shiny LLM player is designed to provide a user-friendly interface for playing with multiple large language models easily, the core features are MAP.
+Shiny LLM player is designed to provide a user-friendly interface for playing with multiple large language models easily, the core features are MAP. This is the [web demo]( https://r7prz5-yong-wang.shinyapps.io/shiny_llm_player/)
 
 |||
 |------------------------------------|------------------------------------|
@@ -77,10 +78,10 @@ by combined the database schema and statistic information
 
 To use the shiny llm player, you has two choices:
 
-### 4.1. Web demo,
+### 4.1. Web demo  
 <a id="web_demo"></a>
 
-just open below link for fun, demo
+just open below link for fun, [web demo]( https://r7prz5-yong-wang.shinyapps.io/shiny_llm_player/)
 
 ### 4.2. Run App @rstudio 
 <a id="rstudio"></a>
