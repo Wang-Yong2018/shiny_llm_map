@@ -4,7 +4,7 @@ box::use(magick[image_info,
 
 
 
-resize_image <- function(img_path,max_width=400,max_height=300) {
+resize_image <- function(img_path, max_width = 400, max_height = 300) {
   # resize he image to max_width* max_height size 
   # load image
   img_content <- image_read(img_path)
@@ -30,12 +30,12 @@ resize_image <- function(img_path,max_width=400,max_height=300) {
                    alt = "This is an resized image")
   } else {
     # Return original image details if no scaling needed
-    result<- list(src = img_content, 
+    result <- list(src = img_content, 
                   contentType = 'image/jpep', # Adjust based on image format 
                   width = paste0(info$width,'px'),
                   height = paste0(info$height,'px'),
                   alt = "This is an original image")
   }
-  tmpfile <- result$src |> image_write(tempfile(fileext='jpg'), format = 'jpg')
+  tmpfile <- result$src |> image_write(tempfile(fileext = 'jpg'), format = 'jpg')
   return(tmpfile)
 }

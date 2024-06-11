@@ -28,7 +28,7 @@ box::use(stats[runif])
 
 render_msg_fancy <- function(messages, self_username) {
   fancy_msg <- 
-    messages|> 
+    messages |> 
     by_row(~ div(class =  if_else(
       .$username == self_username,
       "chat-message-left", "chat-message-right"),
@@ -65,29 +65,32 @@ ui <- function(id, label='chat_echo'){
       
     ),
     fluidRow(
-      column(width=7,
-             tags$div(textAreaInput(ns("msg_text"),
-                                    label = NULL,
-                                    width='800px',
-                                    height='60px',
-             ) )),
-      column(width=2,
-             actionButton(ns("msg_button"),
-                          i18n$translate('ask ai'),
-                          height="30px"),
-             style="display:flex; color: blue;"),
-      hr()
+      column(width = 7, tags$div(
+        textAreaInput(
+          ns("msg_text"),
+          label = NULL,
+          width = '800px',
+          height = '60px',
+        )
+      )),
+      column(
+        width = 2,
+        actionButton(ns("msg_button"), i18n$translate('ask ai'), height =
+                       "30px"),
+        style = "display:flex; color: blue;"
       ),
-    fluidRow(
-      column(width=3,
-             textInput(ns("msg_username"), i18n$translate('user name'), value = i18n$translate('stranger'))
-             ),
-      column(width=2,
-             actionButton(ns("msg_clearchat"),
-                          i18n$translate('clean chat'),
-                          style = "color: blue;")
-             )
-    )
+      hr()
+    ), fluidRow(column(
+      width = 3,
+      textInput(
+        ns("msg_username"),
+        i18n$translate('user name'),
+        value = i18n$translate('stranger')
+      )
+    ), column(
+      width = 2,
+      actionButton(ns("msg_clearchat"), i18n$translate('clean chat'), style = "color: blue;")
+    ))
 
     
 )}
@@ -97,10 +100,11 @@ ui <- function(id, label='chat_echo'){
 server <- function(id) {
   
   moduleServer(id, function(input, output, session) {
-    shiny::updateTextInput(inputId = "msg_username",
-                           value = paste0("八卦之人", round(runif(n=1, min=1000,max = 9999)),'号'))
+    shiny::updateTextInput(inputId = "msg_username", value = paste0("八卦之人", round(runif(
+      n = 1, min = 1000, max = 9999
+    )), '号'))
     
-    con <- db_connect(model_db='echo')
+    con <- db_connect(model_db = 'echo')
     
     # set up our messages data locally
     messages_db <- reactiveValues(messages = read_messages(con))
@@ -129,13 +133,14 @@ server <- function(id) {
       
       # only do anything if there's a message
       if (!(input$msg_text == "" | is.null(input$msg_text))) {
-        send_message(con, sender=input$msg_username, content=input$msg_text)
+        send_message(con,
+                     sender = input$msg_username,
+                     content = input$msg_text)
         
         messages_db$messages <- read_messages(con)
         
         # clear the message text
-        shiny::updateTextInput(inputId = "msg_text",
-                               value = "")
+        shiny::updateTextInput(inputId = "msg_text", value = "")
       }
     })
     

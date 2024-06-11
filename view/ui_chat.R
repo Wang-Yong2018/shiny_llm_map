@@ -25,7 +25,7 @@ box::use(../etl/chat_api[db_connect,
 box::use(../etl/llmapi[ get_llm_result, check_llm_connection,
                         llm_chat,
                         get_ai_result,
-                        get_chat_history,])
+                        get_chat_history])
 box::use(purrrlyr[by_row],
          purrr[pluck])
 box::use(../global_constant[app_name,app_language, i18n,
@@ -46,7 +46,7 @@ box::use(stats[runif])
 
 render_msg_fancy <- function(messages, self_username) {
   fancy_msg <- 
-    messages|> 
+    messages |> 
     by_row(~ div(class =  if_else(
       .$username == self_username,
       "chat-message-left", "chat-message-right"),
@@ -82,25 +82,27 @@ ui <- function(id, label='chat_llm'){
       withSpinner( uiOutput(ns("messages_fancy")) )
     ),
     fluidRow(
-      column(width=7,
-             tags$div(textAreaInput(ns("msg_text"), label = NULL ) )),
-      column(width=2,selectInput(ns('model_id'),
-                                 label= i18n$translate('model list'),
-                                 choices=model_id_list,
-                                 multiple=TRUE,
-                                 selected=model_id_list[1])),
-      column(width=2,
-             actionButton(ns("msg_button"),
-                          i18n$translate('ask ai'),
-             style="display:flex; color: blue;") )
+      column(width = 7, tags$div(textAreaInput(ns("msg_text"), label = NULL))), column(
+        width = 2,
+        selectInput(
+          ns('model_id'),
+          label = i18n$translate('model list'),
+          choices = model_id_list,
+          multiple = TRUE,
+          selected = model_id_list[1]
+        )
+      ), column(width = 2,
+                actionButton(ns("msg_button"), i18n$translate('ask ai'), style =
+                               "display:flex; color: blue;"))
       ),
     fluidRow(
-      column(width=3,
-             textInput(ns("msg_username"),  i18n$translate("User Name"), value =  i18n$translate("Stranger" ))
-             ),
-      column(width=2,
-             actionButton(ns("msg_clearchat"),  i18n$translate("Clear Chat"),style = "color: blue;")
-             )
+      column(width = 3,
+             textInput(
+               ns("msg_username"),
+               i18n$translate("User Name"),
+               value =  i18n$translate("Stranger")
+             )), column(width = 2,
+                        actionButton(ns("msg_clearchat"), i18n$translate("Clear Chat"), style = "color: blue;"))
     )
 
 )}
@@ -113,7 +115,7 @@ server <- function(id) {
     #                        value = paste0("八卦之人",
     #                                       round(runif(n=1, min=1000,max = 9999)),'号'))
     
-    con <- db_connect(model_db='gemini')
+    con <- db_connect(model_db = 'gemini')
     
     # set up our messages data locally
     messages_db <- reactiveValues(messages = read_messages(con))
@@ -140,30 +142,33 @@ server <- function(id) {
     # if (debug) message(input$msg_text)
     # only do anything if there's a message
       if (!(input$msg_text == "" | is.null(input$msg_text))) {
-        send_message(con, 
-                     sender=input$msg_username, 
-                     content=input$msg_text)
+        send_message(con,
+                     sender = input$msg_username,
+                     content = input$msg_text)
         # Reactive expression to return selected values
         
          for (id in input$model_id) {
            # llm_answer <- get_llm_result(prompt=input$msg_text,
            #                              model_id = id)
-           if (!history$exists('chat_history')){
-             last_history<-NULL
-           }else{ 
+           if (!history$exists('chat_history')) {
+             last_history <- NULL
+           } else{
              last_history <- history$get('chat_history')
-             }
+           }
            
-           ai_response <- get_llm_result(prompt=input$msg_text, 
-                                    model_id=id,
-                                    history = last_history) 
+           ai_response <- get_llm_result(prompt = input$msg_text,
+                                         model_id = id,
+                                         history = last_history) 
            #TODO extract response info and build new history
-           last_history <- get_chat_history(input$msg_text,role='user',last_history=last_history)
+           last_history <- get_chat_history(input$msg_text, role = 'user', last_history =
+                                              last_history)
            ai_message <- get_ai_result(ai_response)
-           new_history <- get_chat_history(message=ai_message$content,
-                                           role=ai_message$role, 
-                                           last_history=last_history) 
-            
+           new_history <- get_chat_history(
+             message = ai_message$content,
+             role = ai_message$role,
+             last_history = last_history
+           )
+           
            history$set('chat_history',new_history)
            
            log_debug("**********************")
@@ -172,9 +177,7 @@ server <- function(id) {
            log_debug(paste0('the new history is ----->',new_history))
            llm_answer <- ai_message$content
            
-           send_message(con, 
-                        sender=id,
-                        content=llm_answer)
+           send_message(con, sender = id, content = llm_answer)
            
            messages_db$messages <- read_messages(con)
            

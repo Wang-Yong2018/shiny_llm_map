@@ -40,45 +40,48 @@ ui <- function(id, label='agent_llm'){
   ns <- NS(id)
   
   fluidPage(
-    fluidRow(
-      column(width=6,
-             fileInput(
-               inputId = ns('file'),
-               label = i18n$translate('Choose config json:'),
-               buttonLabel =i18n$translate('Browse...'),
-             )),
-      column(width=6,
-             textAreaInput(
-               inputId = ns('prompt'),
-               label = i18n$translate('Prompt'),
-               value= i18n$translate(img_vision_prompt),
-               placeholder = i18n$translate('Enter Prompts Here') )
-             
-      )),
-    fluidRow(
-      column(width=6,selectInput(ns('model_id'),
-                                 label= i18n$translate('agent mode list'),
-                                 choices=vision_model_list,
-                                 multiple=FALSE,
-                                 selected='gemini')),
-      column(width=6,
-             actionButton(ns('goButton'), i18n$translate('ask ai'),style = "color: blue;") ),
-   
-    ) ,
-    fluidRow(
-      column(width=6,
-             div( style = 'border: solid 1px black;',
-                  jsoneditOutput(outputId = ns('json_config'),
-                              width='50%',
-                              height='auto') 
-             ) 
-      ),
-      column(width=6,
-             style = 'border: solid 1px black; min-height: 100px;',     
-             uiOutput(ns('text1')) )
-      
+    fluidRow(column(
+      width = 6,
+      fileInput(
+        inputId = ns('file'),
+        label = i18n$translate('Choose config json:'),
+        buttonLabel = i18n$translate('Browse...'),
+      )
+    ), column(
+      width = 6,
+      textAreaInput(
+        inputId = ns('prompt'),
+        label = i18n$translate('Prompt'),
+        value = i18n$translate(img_vision_prompt),
+        placeholder = i18n$translate('Enter Prompts Here')
+      )
+    )), 
+    fluidRow(column(
+      width = 6,
+      selectInput(
+        ns('model_id'),
+        label = i18n$translate('agent mode list'),
+        choices = vision_model_list,
+        multiple = FALSE,
+        selected = 'gemini'
+      )
     ),
-  )
+    column(
+      width = 6,
+      actionButton(ns('goButton'), i18n$translate('ask ai'), style = "color: blue;")
+    ),) , 
+    fluidRow(
+      column(width = 6, div(
+        style = 'border: solid 1px black;',
+        jsoneditOutput(
+          outputId = ns('json_config'),
+          width = '50%',
+          height = 'auto'
+        )
+      )),
+      column(width = 6, style = 'border: solid 1px black; min-height: 100px;', uiOutput(ns('text1')))
+      
+    ), )
 }
 
 
@@ -86,8 +89,8 @@ ui <- function(id, label='agent_llm'){
 server <- function(id) {
   moduleServer(id, function(input, output, session) {
    
-    output$server_status<- renderText({
-      status_code <-'200' #get_server_status_code()
+    output$server_status <- renderText({
+      status_code <- '200' #get_server_status_code()
       message <- paste0(
         i18n$translate("server connection:"),
         status_code
@@ -102,24 +105,24 @@ server <- function(id) {
         print("\n==========================")
         func_list <- fromJSON(input$file$datapath,simplifyVector = F) 
       
-        print( func_list |>
-                 toJSON(prett=T,auto_unbox = T)
-               )
+        print(func_list |>
+                toJSON(prett = T, auto_unbox = T))
         
-        message <-  get_llm_result(prompt=input$prompt,
-                                   model_id=input$model_id,
-                                   llm_type = 'img',
-                                   funcs_json=func_list)
+        message <-  get_llm_result(
+          prompt = input$prompt,
+          model_id = input$model_id,
+          llm_type = 'img',
+          funcs_json = func_list
+        )
         
-        if (is.null(message)){
+        if (is.null(message)) {
           message <- 'failed to detect!!!'
-        }else{
+        } else{
           print(message)
-          ai_message <- get_ai_result(message,ai_type='agent')   
+          ai_message <- get_ai_result(message, ai_type = 'agent')
           fancy_vision_message = markdown(ai_message$content)
         }
-        print("**************************")
-        print(paste0(' output is :',fancy_vision_message))
+        log_debug(paste0(' output is :',fancy_vision_message))
         
         return(fancy_vision_message)
       })

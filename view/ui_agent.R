@@ -36,8 +36,8 @@ box::use(stats[runif])
 box::use(../etl/agent_router[get_agent_result])
 
 
-all_funcs_json <- read_json('./data/tools_config.json',simplifyVector = F)
-func_name <-   all_funcs_json|> map_chr(pluck('name'))
+all_funcs_json <- read_json('./data/tools_config.json', simplifyVector = F)
+func_name <-   all_funcs_json |> map_chr(pluck('name'))
 
 
 
@@ -54,61 +54,61 @@ ui <- function(id, label='agent_llm'){
      #Sidebar with a slider input for number of bins
      fluidRow(
        id = "chatbox-container",
-       column(width= 5,
-              #  style = 'border: solid 0.1px grey; min-height: 100px;',  
-              textAreaInput(inputId = ns("prompt"), 
-                            label =  i18n$translate("prompt_input"), rows = 2, cols = 30)
-       ),
-       column(width=1),
-       column(width=6,
-              style = 'border: solid 0.1px grey; min-height: 100px;',  
-              uiOutput(
-                         #label = 'AI feedback',
-                         outputId = ns('ai_output')#,value = 'AI feedback'
-              )
-       )
+       column(width = 5,
+              #  style = 'border: solid 0.1px grey; min-height: 100px;',
+              textAreaInput(
+                inputId = ns("prompt"),
+                label =  i18n$translate("prompt_input"),
+                rows = 2,
+                cols = 30
+              )), 
+       column(width = 1), 
+       column(width = 6, 
+              style = 'border: solid 0.1px grey; min-height: 100px;',
+              uiOutput(label = 'AI feedback',
+                outputId = ns('ai_output')#,value = 'AI feedback'
+              ))
      ),
      fluidRow(
-       column( width=6,
-               actionButton( ns('goButton'), i18n$translate('ask ai'),style = "color: blue;") 
-               )
+       column(width = 6,
+              actionButton(ns('goButton'), 
+                           i18n$translate('ask ai'),
+                           style = "color: blue;"))
      ),
      
      fluidRow(
        column(
          width = 2,
          selectInput(inputId =   ns('func_selector'),
-           #'func_selector',
-           label = i18n$translate('agent list'),
-           choices = func_name,
-           selected= func_name[1]
+                     label = i18n$translate('agent list'),
+                     choices = func_name,
+                     selected = func_name[1]
          )
        ),
        column(
          width = 2,
          selectInput(inputId =  ns('model_id'),
-          # 'model_id',
-           label =  i18n$translate('model list'),
-           choices =model_id_list,
-           selected = 'gpt35' )
+                     label =  i18n$translate('model list'), 
+                     choices = model_id_list, 
+                     selected = 'gpt35' )
        )
        
      ),
      fluidRow(
-       column(width= 6,
+       column(width = 6, 
               style = 'border: solid 0.1px grey; min-height: 100px;', 
               verbatimTextOutput(
                 outputId = ns('txt_json_config'),
                 #'txt_json_config'#, value = 'hi,this for show the json function definition'
               )
        ),
-       column(width=6,
+       column(width = 6, 
               style = 'border: solid 0.1px grey; min-height: 100px;',  
               withSpinner( uiOutput( outputId = ns('txt_json_feedback') ) )
        )
        
      )
-    
+     
 )}
 
 
@@ -116,48 +116,36 @@ ui <- function(id, label='agent_llm'){
 server <- function(id) {
   moduleServer(id, function(input, output, session) {
     
-    # based on the selectInput to the function definiton
-    # 
-    # get_func_definition <- reactive({
-    #   all_funcs_json |> 
-    #     keep(function(x) pluck(x, 'chinese_name') == input$func_selector) 
-    # })
-    # 
-    # output$txt_json_config <- renderPrint({
-    #   
-    #   json_config <- 
-    #     get_func_definition()|>
-    #     toJSON(auto_unbox = T, pretty=T)
-    #   
-    #   print(json_config)
-    #   return(json_config) 
-    # })
-    # 
     get_func_definition <- reactive({
       #print(input$func_selector)
-      result <- all_funcs_json |> 
-        keep(function(x) pluck(x, 'name') == input$func_selector)
+      result <- all_funcs_json |>
+        keep(function(x)
+          pluck(x, 'name') == input$func_selector)
     })
     
-    output$txt_json_config <-renderPrint({
+    output$txt_json_config <- renderPrint({
+      
       
       get_func_definition() |>
-        toJSON(auto_unbox = T, pretty=T)
+        toJSON(auto_unbox = T, pretty = T)
     })
+    
     observeEvent(input$goButton, {
       
       #ai_message <- get_reactive_ai_answer()
       func_json <- get_func_definition()
-      ai_message <-  
-        get_llm_result(prompt=input$prompt,
-                       #img_url=input$file$datapath,
-                       model_id=input$model_id,
-                       llm_type = 'agent',
-                       funcs_json = func_json)|>
-        get_ai_result(ai_type='agent') 
+      ai_message <-
+        get_llm_result(
+          prompt = input$prompt,
+          #img_url=input$file$datapath,
+          model_id = input$model_id,
+          llm_type = 'agent',
+          funcs_json = func_json
+        ) |>
+        get_ai_result(ai_type = 'agent') 
       
-      output$ai_output<- renderUI({
-        ai_message|> 
+      output$ai_output <- renderUI({
+        ai_message |>
           pluck('content')
         
       })
@@ -165,10 +153,9 @@ server <- function(id) {
       
       output$txt_json_feedback <- renderPrint({
         func_result <- 'no support! only chatgpt interface compatible'
-        if (grepl('gpt',input$model_id)){
-          func_result <-  get_agent_result(ai_message)|>
-            gsub(pattern='\n',
-                 replacement='<br />')|>
+        if (grepl('gpt', input$model_id)) {
+          func_result <-  get_agent_result(ai_message) |>
+            gsub(pattern = '\n', replacement = '<br />') |>
             markdown()
           log_debug(paste0('the output of func_result is ===>', func_result))
         }

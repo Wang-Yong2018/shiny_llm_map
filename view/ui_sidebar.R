@@ -18,6 +18,7 @@ box::use(shiny[NS,tagList,icon,h2,
                checkboxInput,
                actionButton,
                textOutput,renderText,
+               reactiveVal,
                moduleServer,
                observeEvent,
                reactive, req])
@@ -28,34 +29,64 @@ box::use(shinydashboard[sidebarMenu, dashboardBody,
                         menuSubItem,menuItem])
 
 #' @export
-ui <- function(id,label='sidebar'){
+ui <- function(id, label = 'sidebar') {
   ns <- NS(id)
-  tagList(
-    sidebarMenu( id='sidebar',collapsed=TRUE,
-                 menuItem(i18n$translate('help'),icon=icon('compass'),startExpanded =T, 
-                          tabName = 'help', selected=TRUE),
-                 
-                 menuItem(i18n$translate('Features'),icon=icon('dashboard'),startExpanded =T,
-                          menuSubItem(i18n$translate("Multi_ASK"),
-                                      tabName = 'chat_llm',icon=icon('walkie-talkie')),
-                          menuSubItem(i18n$translate("Analyze_IMG"),
-                                      tabName = 'vision_llm',icon=icon('image')),
-                          menuSubItem(i18n$translate("Probe_DB"),
-                                      tabName = 'sql_llm',icon=icon('database')),
-                          menuSubItem(i18n$translate("Play_agent"),
-                                      tabName = 'agent_llm',icon=icon('link')),
-                          menuSubItem(i18n$translate("Play_rag"),
-                                      tabName = 'rag_llm',icon=icon('file'))
-                 ),
-                 menuItem(i18n$translate('Config'),icon=icon('tools'),startExpanded =F)
-                 
-    ))
+  tagList(sidebarMenu(
+    id = ns('sidebar'),
+    collapsed = TRUE,
+    menuItem(
+      i18n$translate('help'),
+      icon = icon('compass'),
+      startExpanded = T,
+      tabName = 'help',
+      selected = TRUE
+    ),
+    
+    menuItem(
+      i18n$translate('Features'),
+      icon = icon('dashboard'),
+      startExpanded = T,
+      menuSubItem(
+        i18n$translate("Multi_ASK"),
+        tabName = 'chat_llm',
+        icon = icon('walkie-talkie')
+      ),
+      menuSubItem(
+        i18n$translate("Analyze_IMG"),
+        tabName = 'vision_llm',
+        icon = icon('image')
+      ),
+      menuSubItem(
+        i18n$translate("Probe_DB"),
+        tabName = 'sql_llm',
+        icon = icon('database')
+      ),
+      menuSubItem(
+        i18n$translate("Play_agent"),
+        tabName = 'agent_llm',
+        icon = icon('link')
+      ),
+      menuSubItem(
+        i18n$translate("Play_rag"),
+        tabName = 'rag_llm',
+        icon = icon('file')
+      )
+    ),
+    menuItem(
+      i18n$translate('Config'),
+      icon = icon('tools'),
+      startExpanded = F
+    )
+    
+  ))
 }
 
 
 #' @export
 server <- function(id){
   moduleServer(id, function(input, output, session) {
+    selected_mod <- reactive(input$sidebar)
+    return(selected_mod)
     
   })
 }

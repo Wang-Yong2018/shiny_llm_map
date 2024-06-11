@@ -38,45 +38,49 @@ ui <- function(id, label='vision_llm'){
   
   fluidPage(
     fluidRow(
-      column(width=6,
-             fileInput(
-               inputId = ns('file'),
-               label = i18n$translate('Choose file to upload'),
-               buttonLabel =i18n$translate('Browse...'),
-             )),
-      column(width=6,
-             textAreaInput(
-               inputId = ns('prompt'),
-               label = i18n$translate('Prompt'),
-               value= i18n$translate(img_vision_prompt),
-               placeholder = i18n$translate('Enter Prompts Here') )
-             
-      )),
-    fluidRow(
-      column(width=6,selectInput(ns('model_id'),
-                                 label= i18n$translate('vision mode list'),
-                                 choices=vision_model_list,
-                                 multiple=FALSE,
-                                 selected='gemini')),
-      column(width=6,
-             actionButton(ns('goButton'),
-                          i18n$translate('ask ai'),
-                          style = "color: blue;")),
-   
-    ) ,
-    fluidRow(
-      column(width=6,
-             div( style = 'border: solid 1px black;',
-                  imageOutput(outputId = ns('image1'),
-                              width='50%',
-                              height='auto') 
-             ) 
+      column(
+        width = 6,
+        fileInput(
+          inputId = ns('file'),
+          label = i18n$translate('Choose file to upload'),
+          buttonLabel = i18n$translate('Browse...'),
+        )
+      ), column(
+        width = 6,
+        textAreaInput(
+          inputId = ns('prompt'),
+          label = i18n$translate('Prompt'),
+          value = i18n$translate(img_vision_prompt),
+          placeholder = i18n$translate('Enter Prompts Here')
+        )
+        
+      )), fluidRow(column(
+        width = 6,
+        selectInput(
+          ns('model_id'),
+          label = i18n$translate('vision mode list'),
+          choices = vision_model_list,
+          multiple = FALSE,
+          selected = 'gemini'
+        )
       ),
-      column(width=6,
-             style = 'border: solid 1px black; min-height: 100px;',     
-             withSpinner( uiOutput(ns('text1')) ) )
+      column(
+        width = 6,
+        actionButton(ns('goButton'), i18n$translate('ask ai'), style = "color: blue;")
+      ),) , 
+    fluidRow(
+      column(width = 6, div(
+        style = 'border: solid 1px black;', imageOutput(
+          outputId = ns('image1'),
+          width = '50%',
+          height = 'auto'
+        )
+      )),
+      column(width = 6, style = 'border: solid 1px black; min-height: 100px;', withSpinner(uiOutput(ns(
+        'text1'
+      ))))
       
-    ),
+    ), 
   )
 }
 
@@ -85,12 +89,9 @@ ui <- function(id, label='vision_llm'){
 server <- function(id) {
   moduleServer(id, function(input, output, session) {
    
-    output$server_status<- renderText({
-      status_code <-'200' #get_server_status_code()
-      message <- paste0(
-        i18n$translate("server connection:"),
-        status_code
-      )
+    output$server_status <- renderText({
+      status_code <- '200' #get_server_status_code()
+      message <- paste0(i18n$translate("server connection:"), status_code)
       return(message)
     })
     
@@ -100,19 +101,20 @@ server <- function(id) {
       output$text1 <- renderText({
         log_debug("\n==========================")
         log_debug(paste0(' input is :',input$prompt))
-        message <-  get_llm_result(prompt=input$prompt,
-                                   img_url=input$file$datapath,
-                                   model_id=input$model_id,
-                                   llm_type = 'img')
+        message <-  get_llm_result(
+          prompt = input$prompt,
+          img_url = input$file$datapath,
+          model_id = input$model_id,
+          llm_type = 'img'
+        )
         
-        if (is.null(message)){
+        if (is.null(message)) {
           message <- '# failed to detect!!!'
-          fancy_vision_message = markdown(message) 
-        }else{
-          ai_message <- get_ai_result(message,ai_type='img')   
+          fancy_vision_message = markdown(message)
+        } else{
+          ai_message <- get_ai_result(message, ai_type = 'img')
           fancy_vision_message = markdown(ai_message$content)
         }
-        log_debug("**************************")
         
         log_debug(paste0(' output is :',fancy_vision_message))
         

@@ -8,14 +8,14 @@ box::use(../global_constant[app_name,app_language,
 
 call_math <- function(agent_arguments) {
   
-  arguments <- 
-    agent_arguments|>
+  arguments <-
+    agent_arguments |>
     fromJSON(simplifyVector = F)
   
   # Switch to calculate the result based on the function name
   func_name <- arguments[1]
-  num1 <- arguments[2]|>as.numeric()
-  num2 <- arguments[3]|>as.numeric()
+  num1 <- arguments[2] |> as.numeric()
+  num2 <- arguments[3] |> as.numeric()
   
   result <- switch(tolower(func_name),
          "addition" = num1 + num2,
@@ -24,7 +24,7 @@ call_math <- function(agent_arguments) {
          "division" = num1 / num2,
          "sqrt" = sqrt(num1),
          "log" = log(num1),
-         'mod' = num1%%num2,
+         'mod' = num1 %% num2, 
          "power" = num1 ** num2,
          "sin" = sin(num1),
          "cos" = cos(num1),

@@ -49,59 +49,65 @@ box::use(jsonlite[fromJSON, toJSON],
 ui <- function(id, label='sql_llm'){
   ns <- NS(id)
   
-  fluidPage(
-    fluidRow(
-      column(width=6,
-             style = "height: 200px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
-             textAreaInput(
-               inputId = ns('prompt'),
-               label = i18n$translate('Prompt'),
-               value = i18n$translate(''),
-               placeholder = i18n$translate('Tell AI, you role and your question '),
-               width='100%',
-               rows=8
-               )
+  fluidPage(fluidRow(
+    column(
+      width = 6,
+      style = "height: 200px;overflow-y: scroll; border: 1px solid black; padding: 10px;",
+      textAreaInput(
+        inputId = ns('prompt'),
+        label = i18n$translate('Prompt'),
+        value = i18n$translate(''),
+        placeholder = i18n$translate('Tell AI, you role and your question '),
+        width = '100%',
+        rows = 8
+      )
+    ),
+    column(
+      width = 6,
+      actionButton(ns('goButton'), i18n$translate('Ask Agent'), style = "color: blue;") ,
+      selectInput(
+        ns('model_id'),
+        label = i18n$translate('model list'),
+        choices = sql_model_id_list,
+        multiple = FALSE,
+        selected = 'gpt'
       ),
-      column(width=6,
-             actionButton(ns('goButton'), 
-                          i18n$translate('Ask Agent'),
-                          style = "color: blue;") ,
-             selectInput(ns('model_id'),
-                                 label= i18n$translate('model list'),
-                                 choices=sql_model_id_list,
-                                 multiple=FALSE,
-                                 selected='gpt'),
-             selectInput(ns('db_id'),
-                                 label= i18n$translate('database list'),
-                                 choices=db_id_list,
-                                 multiple=FALSE,
-                                 selected=NULL)
-      )),
-    fluidRow(
-      tabsetPanel( 
-        tabPanel(i18n$translate('Evaluate'), 
-                 withSpinner(
-                 uiOutput(ns('evaluation')) )
-                 ),
-        tabPanel(i18n$translate('Data'),
-                 withSpinner(
-                 uiOutput(ns('sql_result')) )),
-        tabPanel(i18n$translate('Context'),   
-                 textAreaInput(ns('system_prompt'),
-                                            label=' system prompt',
-                                            placeholder = '',
-                                            rows=50 )),
-        tabPanel(i18n$translate('Graph_erd'),  
-                 withSpinner(
-                 grVizOutput(ns('graph_erd')))) ,
-        tabPanel(i18n$translate('AI_sql'),   
-                 withSpinner(
-                 uiOutput(ns('sql_query'))) ),
-        selected = i18n$translate('Evaluate'),
- 
+      selectInput(
+        ns('db_id'),
+        label = i18n$translate('database list'),
+        choices = db_id_list,
+        multiple = FALSE,
+        selected = NULL
       )
     )
- 
+  ), fluidRow(
+    tabsetPanel(
+      tabPanel(i18n$translate('Evaluate'), withSpinner(uiOutput(ns(
+        'evaluation'
+      )))),
+      tabPanel(i18n$translate('Data'), withSpinner(uiOutput(ns(
+        'sql_result'
+      )))),
+      tabPanel(
+        i18n$translate('Context'),
+        textAreaInput(
+          ns('system_prompt'),
+          label = ' system prompt',
+          placeholder = '',
+          rows = 50
+        )
+      ),
+      tabPanel(i18n$translate('Graph_erd'), withSpinner(grVizOutput(ns(
+        'graph_erd'
+      )))) ,
+      tabPanel(i18n$translate('AI_sql'), withSpinner(uiOutput(ns(
+        'sql_query'
+      )))),
+      selected = i18n$translate('Evaluate'),
+      
+    )
+  )
+  
     
  )}
 
@@ -118,106 +124,112 @@ server <- function(id) {
     get_reactive_evaluation <- reactive({
       db_content <- get_db_schema_text(input$db_id)
       evaluation_prompt_template  <- i18n$translate(
-        'As business analysis pls analyze the following database schema and evaluate the business value and opportunities')
-       
-      evaluation_prompt = paste0(evaluation_prompt_template,'\n',db_content)
-      ai_evaluation <- get_llm_result(prompt=evaluation_prompt, model_id=input$model_id)|>
-        get_ai_result(ai_type='chat')
+        'As business analysis pls analyze the following database schema and evaluate the business value and opportunities'
+      )
+      
+      evaluation_prompt = paste0(evaluation_prompt_template, '\n', db_content)
+      ai_evaluation <- get_llm_result(prompt = evaluation_prompt, model_id =
+                                        input$model_id) |>
+        get_ai_result(ai_type = 'chat')
       
       log_debug(paste0('ai data_base evaluation result ai_evaluation', ai_evaluation))
       log_debug(ai_evaluation)
-      ai_evaluation|>
-        pluck('content')|>markdown()
-    })|>bindCache(input$db_id,input$model_id)
+      ai_evaluation |>
+        pluck('content') |> markdown()
+    }) |> bindCache(input$db_id, input$model_id)
     
     
     
     # TODO split get sql message in to get_ai_messag / get_sql_message
     get_sql_message <- reactive({
-      log_debug(paste0(' input is :',input$prompt))
-      message <-  get_llm_result(prompt=get_reactive_sql_prompt(),
-                                 model_id=input$model_id,
-                                 llm_type = 'sql')
+      log_debug(paste0(' input is :', input$prompt))
+      message <-  get_llm_result(
+        prompt = get_reactive_sql_prompt(),
+        model_id = input$model_id,
+        llm_type = 'sql'
+      )
       
-      result <- '' 
-      if (is.null(message)| grepl('ERROR|error',toJSON(message))){
+      result <- ''
+      if (is.null(message) | grepl('ERROR|error', toJSON(message))) {
         print(result)
-        result <- 
+        result <-
           paste0(
             'You answer can not be answered. Pls \n 1. check the AI_SQL for more clue. \n2. revise your question.\n',
             'The detail database error message is followed:\n',
-          '--', message) 
+            '--',
+            message
+          )
         
         
-      }else{
-        sql_parameter <- list(db_id=input$db_id)
-        ai_sql_message <- get_ai_result(message,ai_type='sql_query',sql_parameter)   
-        print(ai_sql_message) 
-        sql_message <- 
+      } else{
+        sql_parameter <- list(db_id = input$db_id)
+        ai_sql_message <- get_ai_result(message, ai_type = 'sql_query', sql_parameter)
+        print(ai_sql_message)
+        sql_message <-
           get_agent_result(ai_sql_message)
-          result <- sql_message
+        result <- sql_message
       }
       return(result)
-    })|>bindCache(input$db_id,input$model_id,input$prompt)
+    }) |> bindCache(input$db_id, input$model_id, input$prompt)
     
     observeEvent(input$db_id, {
-      new_prompt <- get_reactive_sql_prompt() 
-      output$evaluation <- renderUI({get_reactive_evaluation()})
-      updateTextAreaInput(session,'system_prompt', value = new_prompt)
+      new_prompt <- get_reactive_sql_prompt()
+      output$evaluation <- renderUI({
+        get_reactive_evaluation()
+      })
+      updateTextAreaInput(session, 'system_prompt', value = new_prompt)
     })
     
     
     output$graph_erd <- renderGrViz({
-      
       file_name <- switch(input$db_id,
                           chinook = './data/chinook.gv',
                           cyd = './data/cyd.gv',
                           './data/chinook.gv')
-                        
-    
-      grViz(file_name ,width = "100%", height = "100%")
-    })|>bindCache(input$db_id)
-
-
-    observeEvent(input$goButton, {
-      sql_message <- get_sql_message() 
-      #log_info(paste('the final sql_message (query, result) is ====>',sql_message))
-    
-      output$sql_query  <- renderText({ 
-        log_debug(sql_message)
-        query_sql<- sql_message|>pluck('query') 
-        query_model_id <- sql_message |> pluck('model_id')
-        query_db_id <- sql_message |> pluck('db_id')
-        
-        if (is.null(query_sql)){
-          query_sql <- sql_message |> toJSON(pretty=T, auto_unbox = T)
-        }
-        # todo use pluck to return null, if expect key no exist. It help to skip error bug
-        
-        format_db_id <- paste0('\n --- database id is ',query_db_id)
-        format_model_id <- paste0('\n--- llm model id is :',query_model_id)
-        sql_message <- 
-          paste(query_sql, format_db_id, format_model_id, sep='\n') |>
-          gsub(pattern='\n',
-               replacement='<br />')
-        
-        })
       
       
-      output$sql_result <- renderUI({
-        
-        sql_result <- sql_message|>pluck('result')
-        is_data.frame <- class(sql_result) |> grepl('data.frame',x=_) |> any()
-        if (is_data.frame == TRUE ) {
-          if (nrow(sql_result)>0 ){
-              renderDataTable(sql_result, options = list(pageLength = 20))
-          } else{
-            renderText('No thing found, pls check the ai-sql and revise your question')
-          }
-        } else {
-          renderText(sql_result)
-        }
-      }) 
+      grViz(file_name , width = "100%", height = "100%")
+    }) |> bindCache(input$db_id)
+    
+
+    observeEvent(input$goButton,
+                 {
+                   sql_message <- get_sql_message()
+                   #log_info(paste('the final sql_message (query, result) is ====>',sql_message))
+                   
+                   output$sql_query  <- renderText({
+                     log_debug(sql_message)
+                     query_sql <- sql_message |> pluck('query')
+                     query_model_id <- sql_message |> pluck('model_id')
+                     query_db_id <- sql_message |> pluck('db_id')
+                     
+                     if (is.null(query_sql)) {
+                       query_sql <- sql_message |> toJSON(pretty = T, auto_unbox = T)
+                     }
+                     # todo use pluck to return null, if expect key no exist. It help to skip error bug
+                     
+                     format_db_id <- paste0('\n --- database id is ', query_db_id)
+                     format_model_id <- paste0('\n--- llm model id is :', query_model_id)
+                     sql_message <-
+                       paste(query_sql, format_db_id, format_model_id, sep = '\n') |>
+                       gsub(pattern = '\n', replacement = '<br />')
+                     
+                   })
+      
+                   
+                   output$sql_result <- renderUI({
+                     sql_result <- sql_message |> pluck('result')
+                     is_data.frame <- class(sql_result) |> grepl('data.frame', x = _) |> any()
+                     if (is_data.frame == TRUE) {
+                       if (nrow(sql_result) > 0) {
+                         renderDataTable(sql_result, options = list(pageLength = 20))
+                       } else{
+                         renderText('No thing found, pls check the ai-sql and revise your question')
+                       }
+                     } else {
+                       renderText(sql_result)
+                     }
+                   }) 
       
     })
     
