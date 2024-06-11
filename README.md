@@ -23,7 +23,7 @@ Shiny LLM map is designed to provide a user-friendly interface for playing with 
 
 |||
 |------------------------------------|------------------------------------|
-|<img src="images/clipboard-793703704.png" width="320" height="auto"> | \- **Multi ASK**, Ask text question & chat with multiple models ,<br />- **Analyze IMG**, Vision picture topic and contents <br />- **Probe DB**, Evaluate a database value, query data with nature language |
+|<img src="images/purpose.png" width="320" height="auto"> | \- **Multi ASK**, Ask text question & chat with multiple models ,<br />- **Analyze IMG**, Vision picture topic and contents <br />- **Probe DB**, Evaluate a database value, query data with nature language |
 
 ## 2. Core Concept
 <a id="core_concept"></a>
