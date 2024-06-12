@@ -34,7 +34,7 @@ box::use(../global_constant[app_name,app_language, i18n,
                            model_id_list,vision_model_list,sql_model_id_list,
                            db_id_list])
 box::use(../etl/img_tools[resize_image])
-box::use(../etl/agent_sql[get_sql_prompt,get_gv_string,get_db_schema_text])
+box::use(../etl/agent_sql[get_sql_prompt,get_gv_string,get_db_schema_text,get_db_catalog])
 box::use(../etl/agent_router[get_agent_result])
 box::use(jsonlite[fromJSON, toJSON],
          stringr[str_glue])
@@ -97,9 +97,9 @@ ui <- function(id, label='sql_llm'){
           rows = 50
         )
       ),
-      tabPanel(i18n$translate('Graph_erd'), withSpinner(grVizOutput(ns(
-        'graph_erd'
-      )))) ,
+      tabPanel(i18n$translate('Catalog'), withSpinner(uiOutput(ns(
+        'catalog'
+      )))),
       tabPanel(i18n$translate('AI_sql'), withSpinner(uiOutput(ns(
         'sql_query'
       )))),
@@ -181,15 +181,11 @@ server <- function(id) {
     })
     
     
-    output$graph_erd <- renderGrViz({
-      file_name <- switch(input$db_id,
-                          chinook = './data/chinook.gv',
-                          cyd = './data/cyd.gv',
-                          './data/chinook.gv')
-      
-      
-      grViz(file_name , width = "100%", height = "100%")
-    }) |> bindCache(input$db_id)
+    output$catalog <- renderUI(renderDataTable({
+      db_catalog_df <- get_db_catalog(input$db_id)
+      print(db_catalog_df)
+      return(db_catalog_df)
+    }))
     
 
     observeEvent(input$goButton,

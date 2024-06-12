@@ -1,12 +1,12 @@
-box::use(DBI[dbListTables,dbListFields, dbConnect,dbDisconnect, dbSendQuery, dbFetch,dbClearResult],
+box::use(DBI[dbListTables,dbListFields, dbConnect,dbDisconnect,dbGetQuery, dbSendQuery, dbFetch,dbClearResult],
          RPostgres[Postgres],
          RSQLite[SQLite])
 box::use(logger[log_info, log_warn,  log_debug, log_error, log_threshold,
                 INFO, DEBUG, WARN,ERROR,OFF])
-box::use(dplyr[case_when],
+box::use(dplyr[case_when,mutate],
          dbplyr[as.sql])# add dbplyr[as.sql] jus to shinyio.app report missing the library
 
-box::use(purrr[map,imap,pluck],
+box::use(purrr[map,imap,pluck,list_rbind],
          stats[setNames])
 box::use(jsonlite[fromJSON, toJSON],
          stringr[str_glue])
@@ -279,5 +279,27 @@ get_gv_string <- function(db_id, model_id){
   log_debug(paste0('gv_string ---->',result))
   return(result)
   
+}
+
+#' @export
+get_db_catalog <- function(db_id = NULL){
+  
+  # Connect to SQLite database
+  conn <- get_db_conn(db_id)
+  # Ensure the connection is closed when the function exits, regardless of how it exits
+  on.exit(dbDisconnect(conn), add = TRUE)
+  
+  
+  # List the tables
+  # """Return a list of dicts containing the table name and columns for each table in the database."""
+  tables_list <- dbListTables(conn)
+  
+  df_tbl_info <-
+    tables_list |>
+    map(\(x) dbGetQuery(conn, paste0('select count(1) as rows from ', x))) |>
+    list_rbind(names_to = 'name') |>
+    mutate(name = tables_list)
+  
+  return(df_tbl_info)
 }
 
