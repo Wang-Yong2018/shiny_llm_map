@@ -183,7 +183,6 @@ server <- function(id) {
     
     output$catalog <- renderUI(renderDataTable({
       db_catalog_df <- get_db_catalog(input$db_id)
-      print(db_catalog_df)
       return(db_catalog_df)
     }))
     
