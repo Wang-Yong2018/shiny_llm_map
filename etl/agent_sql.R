@@ -292,13 +292,26 @@ get_db_catalog <- function(db_id = NULL){
   
   # List the tables
   # """Return a list of dicts containing the table name and columns for each table in the database."""
-  tables_list <- dbListTables(conn)
+  tbl_info_list <- get_db_schema(db_id) |> fromJSON()
+  tables_list <-  tbl_info_list |> names()
   
   df_tbl_info <-
     tables_list |>
-    map(\(x) dbGetQuery(conn, paste0('select count(1) as rows from ', x))) |>
-    list_rbind(names_to = 'name') |>
-    mutate(name = tables_list)
+    map(\(x) dbGetQuery(conn, paste0('select count(1) as nrows from ', x))) |>
+    list_rbind() |>
+    mutate(table_name = tables_list,.before=1)
+#    dplyr::select(table_name = tables_list,nrow)
+  
+  
+  tbl_cols_info <- 
+    tbl_info_list |>
+    purrr::map_int(\(x) length(x)) |>
+    tibble::enframe() |>
+    dplyr::select(table_name=name,ncols=value)
+ 
+  df_tbl_info <- 
+    df_tbl_info |> 
+    dplyr::left_join(tbl_cols_info,by=c('table_name'))
   
   return(df_tbl_info)
 }
