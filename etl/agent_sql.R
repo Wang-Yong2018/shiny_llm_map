@@ -294,25 +294,61 @@ get_db_catalog <- function(db_id = NULL){
   # """Return a list of dicts containing the table name and columns for each table in the database."""
   tbl_info_list <- get_db_schema(db_id) |> fromJSON()
   tables_list <-  tbl_info_list |> names()
+  dbms_name <- get_dbms_name(db_id)
   
-  df_tbl_info <-
-    tables_list |>
-    map(\(x) dbGetQuery(conn, paste0('select count(1) as nrows from ', x))) |>
-    list_rbind() |>
-    mutate(table_name = tables_list,.before=1)
-#    dplyr::select(table_name = tables_list,nrow)
+  df_tbl_info <- data.frame() 
   
-  
-  tbl_cols_info <- 
-    tbl_info_list |>
-    purrr::map_int(\(x) length(x)) |>
-    tibble::enframe() |>
-    dplyr::select(table_name=name,ncols=value)
- 
-  df_tbl_info <- 
-    df_tbl_info |> 
-    dplyr::left_join(tbl_cols_info,by=c('table_name'))
+  if (dbms_name %in% c('sqlite')) {
+    # sql lite do not support statisic info, so it has limit info.
+    df_tbl_info <-
+      tables_list |>
+      map(\(x) dbGetQuery(conn, paste0('select count(1) as nrows from ', x))) |>
+      list_rbind() |>
+      mutate(table_name = tables_list,.before=1)
+    
+    
+    tbl_cols_info <- 
+      tbl_info_list |>
+      purrr::map_int(\(x) length(x)) |>
+      tibble::enframe() |>
+      dplyr::select(table_name=name,ncols=value)
+    
+    df_tbl_info <- 
+      df_tbl_info |> 
+      dplyr::left_join(tbl_cols_info,by=c('table_name'))
+    
+  } else {
+     sql_statistic_tbl <- get_tbl_statistic_sql(db_id)
+     df_tbl_info <- conn |> DBI::dbGetQuery(sql_statistic_tbl)
+     
+  }
   
   return(df_tbl_info)
 }
 
+get_tbl_statistic_sql <- function(db_id) {
+  
+  dbms_name <- get_dbms_name(db_id)
+  
+  postgres_sql <-  "
+  with 
+  tbl_row_info as ( SELECT 
+                    schemaname as schema_name, relname as table_name,  n_live_tup as nrows
+                    FROM pg_stat_user_tables ),
+  tbl_col_info as (select table_schema as schema_name, table_name, count(column_name) as ncols 
+     				 from information_schema.columns c 
+     				 where table_schema not in ('pg_catalog','information_schema')
+     				 group by 1,2)
+  select 
+      schema_name, table_name, nrows ,ncols
+  from 
+      tbl_row_info as tr 
+	    left join tbl_col_info as tc using (schema_name, table_name)
+  order by 1,2"
+ 
+  
+  selected_sql <- 
+    case_when( dbms_name == 'postgres'~ postgres_sql 
+               )
+  return(selected_sql)
+}

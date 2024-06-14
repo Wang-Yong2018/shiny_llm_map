@@ -2,7 +2,6 @@
 if (!requireNamespace("R.utils", quietly = TRUE)) {
   install.packages("R.utils")
 }
-renv::restore()
 box::use(logger[log_info, log_warn, 
                 log_debug, log_error, appender_tee,
                 log_threshold,log_formatter,formatter_pander,formatter_json,
