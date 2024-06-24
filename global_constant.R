@@ -42,7 +42,7 @@ app_name <- i18n$translate('shiny_llm_map')
 # time series name
 ts_var_name <- 'biz_date'
 # ts_var_name <-'rq' 
-model_id_list <- c('gpt35','gemini','llama','claude3s','mixtral','deepseekv2','phi','gpt3v','gpt4o')
+model_id_list <- c('gpt35','gemini','llama','claude3h','mixtral','deepseekv2','phi','gpt3v','gpt4o')
 vision_model_list <- c('gpt4v','gemini')
 sql_model_id_list <- model_id_list
 

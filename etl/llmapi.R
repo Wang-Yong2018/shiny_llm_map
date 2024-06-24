@@ -54,7 +54,7 @@ get_select_model_name <- function(model_id) {
     # gpt4v = "openai/gpt-4-vision-preview",
     gemini = "google/gemini-pro-1.5",
     llama = 'meta-llama/llama-3-8b-instruct',
-    claude3s = 'anthropic/claude-3-sonnet:beta',
+    claude3h = 'anthropic/claude-3-haiku',
     mixtral = 'mistralai/mixtral-8x7b-instruct',
     deepseekv2 = 'deepseek/deepseek-chat',
     phi = "microsoft/phi-3-medium-128k-instruct:free",
